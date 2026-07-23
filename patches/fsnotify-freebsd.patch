@@ -1,0 +1,41 @@
+diff --git a/src/fsnotify/base.nim b/src/fsnotify/base.nim
+index 16a6e25..3a164b4 100644
+--- a/src/fsnotify/base.nim
++++ b/src/fsnotify/base.nim
+@@ -2,7 +2,7 @@ when defined(windows):
+   import os, times, windows/winlean
+ elif defined(linux):
+   import posix
+-elif defined(macosx):
++elif defined(macosx) or defined(freebsd):
+   import posix except Time
+   import times
+ 
+@@ -94,7 +94,7 @@ elif defined(linux):
+     if data.cb != nil:
+       data.cb(event)
+ 
+-elif defined(macosx):
++elif defined(macosx) or defined(freebsd):
+   type
+     PathEventData* = object
+       name*: string
+@@ -136,4 +136,4 @@ proc getUniqueFileId*(name: string): uint64 =
+   elif defined(posix):
+     var s: Stat
+     if stat(name, s) == 0:
+-      result = uint64(s.st_dev or s.st_ino shl 32)
++      result = uint64(s.st_dev) or (uint64(s.st_ino) shl 32)
+diff --git a/src/fsnotify/watch.nim b/src/fsnotify/watch.nim
+index e8a9c4d..08d1d7a 100644
+--- a/src/fsnotify/watch.nim
++++ b/src/fsnotify/watch.nim
+@@ -9,7 +9,7 @@ when defined(windows):
+ elif defined(linux):
+   import linpath
+   export linpath
+-elif defined(macosx):
++elif defined(macosx) or defined(freebsd):
+   import macpath
+   export macpath
+ 
