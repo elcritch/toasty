@@ -63,6 +63,39 @@ nim triad
 
 The task does not update it automatically, protecting any local Triad work.
 
+## Run the FreeBSD Session Smoke Test
+
+Start a direct headless River session managed by Triad and exported by WayVNC:
+
+```sh
+nim sessionSmoke
+```
+
+The task validates Triad's config and River protocols, opens two Foot clients,
+exercises focus, workspace, and layout commands, then listens on
+`127.0.0.1:5905`. It remains in the foreground until `Ctrl-C`.
+
+The task refuses to disturb an existing River, Sway, or WayVNC process. To
+explicitly replace the current remote desktop:
+
+```sh
+TOASTY_SESSION_REPLACE=1 nim sessionSmoke
+```
+
+For a non-interactive launch check that cleans up immediately:
+
+```sh
+TOASTY_SESSION_ONCE=1 nim sessionSmoke
+```
+
+Timestamped logs and command responses are written below
+`~/.local/state/toasty/session-smoke/`; `latest` points to the newest run. Set
+`TOASTY_VNC_ADDRESS`, `TOASTY_VNC_PORT`, `TOASTY_SESSION_CLIENT`, or the
+`TOASTY_*_BIN` variables to override the defaults.
+
+See [Milestone 1 runtime proof](docs/milestone-1.md) for the recorded FreeBSD
+environment, protocol matrix, and smoke-test evidence.
+
 ## Test
 
 Run the Toasty tests:
@@ -83,3 +116,4 @@ nim r tests/ttoasty.nim
 - `tests/`: deterministic unit tests.
 - `config.nims`: Toasty tests and Atlas-only Triad build tasks.
 - `patches/`: temporary upstream compatibility patches.
+- `tools/`: repeatable development-session tooling.

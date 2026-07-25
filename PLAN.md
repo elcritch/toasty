@@ -33,27 +33,27 @@ the external window manager, and Toasty is a Merenda-based desktop shell.
 Prove that the compositor and manager work together in a session visible over
 WayVNC before building shell UI.
 
-- [ ] Record the installed River and WayVNC versions.
-- [ ] Record the active `WAYLAND_DISPLAY`, `XDG_RUNTIME_DIR`, seat, and backend.
-- [ ] Confirm which compositor currently owns the WayVNC-visible session.
-- [ ] Verify that River exposes every protocol required by the current Triad
+- [x] Record the installed River and WayVNC versions.
+- [x] Record the active `WAYLAND_DISPLAY`, `XDG_RUNTIME_DIR`, seat, and backend.
+- [x] Confirm which compositor currently owns the WayVNC-visible session.
+- [x] Verify that River exposes every protocol required by the current Triad
       checkout.
-- [ ] Decide whether the development session should be nested or replace the
+- [x] Decide whether the development session should be nested or replace the
       current compositor.
-- [ ] Start an isolated River session without disturbing the existing remote
-      desktop.
-- [ ] Start `deps/triad/triad` as River's external manager.
-- [ ] Launch a simple Wayland client and confirm Triad manages it.
-- [ ] Exercise focus, workspace, and layout commands through `triad msg`.
-- [ ] Confirm the complete session is visible and interactive through WayVNC.
-- [ ] Capture logs and document the exact environment and launch command.
-- [ ] Add a repeatable `nim session` or `nim sessionSmoke` task.
+- [x] Start an isolated headless River session with an explicit replacement
+      guard for the existing remote desktop.
+- [x] Start `deps/triad/triad` as River's external manager.
+- [x] Launch simple Wayland clients and confirm Triad manages them.
+- [x] Exercise focus, workspace, and layout commands through `triad msg`.
+- [x] Confirm the complete session is visible and interactive through WayVNC.
+- [x] Capture logs and document the exact environment and launch command.
+- [x] Add a repeatable `nim sessionSmoke` task.
 
 Exit criteria:
 
-- [ ] River, Triad, a test client, and WayVNC work together for a complete
+- [x] River, Triad, a test client, and WayVNC work together for a complete
       interactive smoke test.
-- [ ] The smoke session can be started again from one documented command.
+- [x] The smoke session can be started again from one documented command.
 
 ## Milestone 2: Merenda Wayland Shell Surface
 
@@ -164,6 +164,6 @@ Exit criteria:
 
 ## Immediate Next Step
 
-- [ ] Audit the running FreeBSD Wayland session and installed River.
-- [ ] Start the isolated River + Triad smoke session.
-- [ ] Record the first successful launch command and logs.
+- [x] Audit the running FreeBSD Wayland session and installed River.
+- [x] Start the isolated River + Triad smoke session.
+- [x] Record the first successful launch command and logs.

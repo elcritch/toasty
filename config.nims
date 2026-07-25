@@ -99,3 +99,10 @@ task triad, "build the external Triad manager with Atlas":
 
 task triadRelease, "build an optimized external Triad manager with Atlas":
   buildTriad(release = true)
+
+task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
+  let
+    rootDir = thisDir()
+    shellBin = requiredTool("TOASTY_SH", "sh")
+    sessionScript = rootDir / "tools" / "session-smoke.sh"
+  exec(shellCommand(@[shellBin, sessionScript]))
