@@ -61,8 +61,6 @@ Resolve the largest UI risk early: desktop panels and overlays need layer-shell
 semantics rather than ordinary application windows.
 
 - [x] Add Merenda to `toasty.nimble` through Atlas.
-- [ ] Resolve and pin a reproducible Merenda dependency graph.
-- [ ] Compile and run the smallest Merenda window on FreeBSD.
 - [ ] Confirm Merenda's current Siwin backend behavior under River.
 - [ ] Audit support for transparency, undecorated windows, output selection,
       scaling, keyboard interactivity, and pointer input.
