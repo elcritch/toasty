@@ -81,7 +81,7 @@ TOASTY_SESSION_REPLACE=1 nim sessionSmoke
 The command performs these checks before remaining in the foreground:
 
 1. Validate `deps/triad/config.default.kdl`.
-2. Start River with `WLR_BACKENDS=headless`, `WLR_RENDERER=pixman`, and one
+2. Start River with `WLR_BACKENDS=headless`, `WLR_RENDERER=gles2`, and one
    headless output.
 3. Start `deps/triad/triad` as River's external manager.
 4. Capture `wayland-info` and enforce Triad's required protocol versions.
@@ -90,7 +90,7 @@ The command performs these checks before remaining in the foreground:
 6. Verify `focus-prev` changes focus and `focus-next` restores it.
 7. Activate workspace 2, return to workspace 1, and verify the state.
 8. Select and verify the grid and tile layouts.
-9. Start WayVNC on `127.0.0.1:5905` and verify the listener.
+9. Start WayVNC with `--gpu` on `127.0.0.1:5905` and verify the listener.
 
 Use `TOASTY_SESSION_ONCE=1 nim sessionSmoke` for the same automated checks with
 immediate cleanup.

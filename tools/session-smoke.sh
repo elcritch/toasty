@@ -176,7 +176,7 @@ stop_existing_session
 
 export XDG_RUNTIME_DIR="$runtime_dir"
 export WLR_BACKENDS=headless
-export WLR_RENDERER=pixman
+export WLR_RENDERER=gles2
 export WLR_HEADLESS_OUTPUTS=1
 export TRIAD_BIN="$triad_bin"
 export TRIAD_CONFIG="$triad_config"
@@ -283,7 +283,7 @@ record_command layout-state
 grep -q '"layout":"tile"' "$log_dir/commands.log" ||
   fail "layout-tile did not select the tile layout"
 
-"$wayvnc_bin" "$vnc_address" "$vnc_port" \
+"$wayvnc_bin" --gpu "$vnc_address" "$vnc_port" \
   >"$log_dir/wayvnc.log" 2>&1 &
 wayvnc_pid=$!
 attempts=0
