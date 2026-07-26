@@ -60,7 +60,7 @@ Exit criteria:
 Resolve the largest UI risk early: desktop panels and overlays need layer-shell
 semantics rather than ordinary application windows.
 
-- [ ] Add Merenda to `toasty.nimble` through Atlas.
+- [x] Add Merenda to `toasty.nimble` through Atlas.
 - [ ] Resolve and pin a reproducible Merenda dependency graph.
 - [ ] Compile and run the smallest Merenda window on FreeBSD.
 - [ ] Confirm Merenda's current Siwin backend behavior under River.
@@ -164,6 +164,6 @@ Exit criteria:
 
 ## Immediate Next Step
 
-- [x] Audit the running FreeBSD Wayland session and installed River.
-- [x] Start the isolated River + Triad smoke session.
-- [x] Record the first successful launch command and logs.
+- [x] Add Merenda to `toasty.nimble` through Atlas.
+- [ ] Resolve and pin a reproducible Merenda dependency graph.
+- [ ] Compile and run the smallest Merenda window on FreeBSD.
