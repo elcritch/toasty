@@ -41,6 +41,25 @@ nim merendaWindowRun
 See [Milestone 2 backend audit](docs/milestone-2.md) for the FreeBSD runtime
 proof, current capability matrix, and layer-shell integration direction.
 
+## Run the Merenda Panel
+
+Build the solid layer-shell panel. This applies the temporary Siwin, FigDraw,
+and Merenda integration patches idempotently before compiling:
+
+```sh
+nim merendaPanel
+```
+
+Run it inside an existing Wayland session with:
+
+```sh
+nim merendaPanelRun
+```
+
+The panel defaults to output index `0`, a height of 48 logical pixels, and no
+margin. Override those values with `TOASTY_PANEL_OUTPUT`,
+`TOASTY_PANEL_HEIGHT`, and `TOASTY_PANEL_MARGIN`.
+
 ## Build Triad on FreeBSD
 
 The `triad` task checks out Triad under `deps/triad`, replays Triad's committed
@@ -103,6 +122,20 @@ For a non-interactive launch check that cleans up immediately:
 
 ```sh
 TOASTY_SESSION_ONCE=1 nim sessionSmoke
+```
+
+To include the Merenda layer-shell panel and validate its Vulkan swapchain and
+48-pixel exclusive zone, use the GPU WayVNC path:
+
+```sh
+nim panelSmoke
+```
+
+`panelSmoke` starts the panel before WayVNC, then launches WayVNC with `--gpu`.
+The panel remains interactive through the VNC connection. The one-shot form is:
+
+```sh
+TOASTY_SESSION_ONCE=1 nim panelSmoke
 ```
 
 Timestamped logs and command responses are written below

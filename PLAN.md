@@ -66,15 +66,15 @@ semantics rather than ordinary application windows.
       scaling, keyboard interactivity, and pointer input.
 - [x] Audit support for `wlr-layer-shell`, anchors, margins, exclusive zones,
       and per-output surfaces.
-- [ ] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
+- [x] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
 - [x] Decide whether layer-shell support belongs in Siwin, Merenda, or a small
       Toasty Wayland host adapter.
-- [ ] Add a focused test or example for the chosen surface integration.
+- [x] Add a focused test or example for the chosen surface integration.
 
 Exit criteria:
 
-- [ ] A Merenda-rendered panel surface appears on a chosen River output.
-- [ ] The panel reserves space and receives pointer input correctly.
+- [x] A Merenda-rendered panel surface appears on a chosen River output.
+- [x] The panel reserves space and receives pointer input correctly.
 - [x] The integration direction is documented before broader UI work starts.
 
 ## Milestone 3: Typed Triad IPC Client
@@ -166,4 +166,5 @@ Exit criteria:
 - [x] Confirm Merenda's current Siwin backend behavior under River.
 - [x] Audit support for transparency, input, scaling, and output selection.
 - [x] Audit the existing Siwin and Merenda layer-shell integration.
-- [ ] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
+- [x] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
+- [ ] Document Triad's native socket discovery and connection lifecycle.

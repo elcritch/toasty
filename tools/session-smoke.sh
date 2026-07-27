@@ -8,6 +8,7 @@ river_bin=${TOASTY_RIVER_BIN:-river}
 wayvnc_bin=${TOASTY_WAYVNC_BIN:-wayvnc}
 wayland_info_bin=${TOASTY_WAYLAND_INFO_BIN:-wayland-info}
 client_bin=${TOASTY_SESSION_CLIENT:-foot}
+panel_bin=${TOASTY_SESSION_PANEL_BIN:-}
 vnc_address=${TOASTY_VNC_ADDRESS:-127.0.0.1}
 vnc_port=${TOASTY_VNC_PORT:-5905}
 replace_session=${TOASTY_SESSION_REPLACE:-0}
@@ -20,6 +21,7 @@ log_dir="$log_root/$timestamp"
 runtime_dir=
 river_pid=
 wayvnc_pid=
+panel_pid=
 cleaned=0
 
 fail() {
@@ -78,6 +80,10 @@ cleanup() {
   [ "$cleaned" -eq 0 ] || return
   cleaned=1
   trap - EXIT INT TERM HUP
+  if [ -n "$panel_pid" ] && kill -0 "$panel_pid" 2>/dev/null; then
+    kill "$panel_pid" 2>/dev/null || true
+    wait "$panel_pid" 2>/dev/null || true
+  fi
   if [ -n "$wayvnc_pid" ] && kill -0 "$wayvnc_pid" 2>/dev/null; then
     kill "$wayvnc_pid" 2>/dev/null || true
     wait "$wayvnc_pid" 2>/dev/null || true
@@ -89,6 +95,11 @@ cleanup() {
   if [ -n "$runtime_dir" ] && [ -d "$runtime_dir" ]; then
     rm -r -- "$runtime_dir"
   fi
+}
+
+stop_session() {
+  cleanup
+  exit 0
 }
 
 wait_for_file() {
@@ -162,12 +173,16 @@ river_bin=$(find_command "$river_bin")
 wayvnc_bin=$(find_command "$wayvnc_bin")
 wayland_info_bin=$(find_command "$wayland_info_bin")
 client_bin=$(find_command "$client_bin")
+if [ -n "$panel_bin" ]; then
+  [ -x "$panel_bin" ] || fail "panel binary is not executable: $panel_bin"
+fi
 
 mkdir -p -- "$log_dir"
 ln -sfn -- "$log_dir" "$log_root/latest"
 runtime_dir=$(mktemp -d "${TMPDIR:-/tmp}/toasty-session.XXXXXX")
 chmod 700 "$runtime_dir"
-trap cleanup EXIT INT TERM HUP
+trap cleanup EXIT
+trap stop_session INT TERM HUP
 
 "$triad_bin" validate-config --config "$triad_config" \
   >"$log_dir/config-validation.log" 2>&1
@@ -216,6 +231,9 @@ require_protocol river_window_manager_v1 4
 require_protocol river_xkb_bindings_v1 2
 require_protocol wl_compositor 1
 require_protocol wl_shm 1
+if [ -n "$panel_bin" ]; then
+  require_protocol zwlr_layer_shell_v1 4
+fi
 
 {
   printf 'date_utc=%s\n' "$timestamp"
@@ -232,6 +250,24 @@ require_protocol wl_shm 1
   printf 'vnc_address=%s\n' "$vnc_address"
   printf 'vnc_port=%s\n' "$vnc_port"
 } >"$log_dir/environment.log"
+
+if [ -n "$panel_bin" ]; then
+  "$panel_bin" >"$log_dir/panel.log" 2>&1 &
+  panel_pid=$!
+  attempts=0
+  while [ "$attempts" -lt 100 ]; do
+    kill -0 "$panel_pid" 2>/dev/null ||
+      fail "the Merenda panel exited during startup; inspect $log_dir/panel.log"
+    if grep -q 'Created Vulkan swapchain' "$log_dir/panel.log" 2>/dev/null; then
+      break
+    fi
+    attempts=$((attempts + 1))
+    sleep 0.1
+  done
+  [ "$attempts" -lt 100 ] ||
+    fail "the Merenda panel did not initialize its Vulkan backend"
+  printf 'panel_bin=%s\n' "$panel_bin" >>"$log_dir/environment.log"
+fi
 
 record_command capabilities
 record_command outputs
@@ -251,6 +287,11 @@ done
 [ "$attempts" -lt 100 ] ||
   fail "Triad did not report both test windows"
 record_command windows
+
+if [ -n "$panel_bin" ]; then
+  grep -q '"actual_size":{"width":628,"height":656}' "$log_dir/commands.log" ||
+    fail "the panel did not reserve its 48-pixel exclusive zone"
+fi
 
 focused_before=$(run_triad_msg focused-window |
   sed -n 's/.*"window":{"id":\([0-9][0-9]*\).*/\1/p')
@@ -282,6 +323,9 @@ record_command layout-tile
 record_command layout-state
 grep -q '"layout":"tile"' "$log_dir/commands.log" ||
   fail "layout-tile did not select the tile layout"
+if [ -n "$panel_bin" ]; then
+  record_command hide-hotkey-overlay
+fi
 
 "$wayvnc_bin" --gpu "$vnc_address" "$vnc_port" \
   >"$log_dir/wayvnc.log" 2>&1 &

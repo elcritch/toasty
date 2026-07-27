@@ -1,4 +1,4 @@
-import std/[os, strutils]
+import std/[json, os, strutils]
 
 --mm:
   atomicArc
@@ -23,17 +23,42 @@ proc commandSucceeds(parts: openArray[string]): bool =
   let (_, exitCode) = gorgeEx(shellCommand(parts))
   exitCode == 0
 
-proc applyFreeBsdPatch(gitBin, triadDir, patchPath: string) =
-  let fsnotifyDir = triadDir / "deps" / "fsnotify"
-  let applyArgs = @[gitBin, "-C", fsnotifyDir, "apply", patchPath]
-  let checkArgs = @[gitBin, "-C", fsnotifyDir, "apply", "--check", patchPath]
-  let reverseArgs =
-    @[gitBin, "-C", fsnotifyDir, "apply", "--reverse", "--check", patchPath]
+proc applyPatch(gitBin, checkoutDir, patchPath, description: string) =
+  let
+    applyArgs = @[gitBin, "-C", checkoutDir, "apply", patchPath]
+    checkArgs = @[gitBin, "-C", checkoutDir, "apply", "--check", patchPath]
+    reverseArgs =
+      @[gitBin, "-C", checkoutDir, "apply", "--reverse", "--check", patchPath]
 
   if commandSucceeds(checkArgs):
     exec(shellCommand(applyArgs))
   elif not commandSucceeds(reverseArgs):
-    raise newException(OSError, "the FreeBSD fsnotify patch no longer applies")
+    raise newException(OSError, description & " patch no longer applies")
+
+proc applyFreeBsdPatch(gitBin, triadDir, patchPath: string) =
+  let fsnotifyDir = triadDir / "deps" / "fsnotify"
+  applyPatch(gitBin, fsnotifyDir, patchPath, "the FreeBSD fsnotify")
+
+proc applyLayerShellPatches(rootDir, gitBin: string) =
+  for entry in [
+    ("siwin", "siwin-layer-shell.patch"),
+    ("figdraw", "figdraw-layer-shell.patch"),
+    ("merenda", "merenda-layer-shell.patch"),
+  ]:
+    let
+      dependency = entry[0]
+      patchName = entry[1]
+      dependencyDir = rootDir / "deps" / dependency
+    if not dirExists(dependencyDir / ".git"):
+      raise newException(
+        OSError, dependency & " checkout is missing; run atlas install first"
+      )
+    applyPatch(
+      gitBin,
+      dependencyDir,
+      rootDir / "patches" / patchName,
+      "the " & dependency & " layer-shell",
+    )
 
 proc buildTriad(release: bool) =
   let
@@ -59,7 +84,17 @@ proc buildTriad(release: bool) =
       exec(shellCommand(@[atlasBin, "init"]))
 
   withDir triadDir:
-    exec(shellCommand(@[atlasBin, "--noexec", "rep", "nimble.lock"]))
+    exec(
+      shellCommand(
+        @[
+          atlasBin,
+          "--project=" & triadDir,
+          "--noexec",
+          "rep",
+          triadDir / "nimble.lock",
+        ]
+      )
+    )
 
   when defined(freebsd):
     applyFreeBsdPatch(gitBin, triadDir, patchPath)
@@ -73,6 +108,15 @@ proc buildTriad(release: bool) =
       "--",
       "--hints:off",
     ]
+  let lock = parseJson(readFile(triadDir / "nimble.lock"))
+  for dependency, _ in lock["packages"]:
+    if dependency == "nim":
+      continue
+    let dependencyDir = triadDir / "deps" / dependency
+    if dirExists(dependencyDir / "src"):
+      buildArgs.add("--path:" & dependencyDir / "src")
+    elif dirExists(dependencyDir):
+      buildArgs.add("--path:" & dependencyDir)
   if release:
     buildArgs.add("-d:release")
     buildArgs.add("--opt:speed")
@@ -83,6 +127,9 @@ proc buildTriad(release: bool) =
   putEnv("TRIAD_DEV_MODE", "0")
   try:
     exec(shellCommand(buildArgs))
+    for binary in ["triad", "triad_niri", "triad_mirror"]:
+      if not fileExists(triadDir / binary):
+        raise newException(OSError, "Triad build did not produce " & binary)
   finally:
     if hadDevMode:
       putEnv("TRIAD_DEV_MODE", previousDevMode)
@@ -99,7 +146,24 @@ proc buildMerendaWindow(run: bool) =
   if not dirExists(merendaDir / ".git"):
     raise newException(OSError, "Merenda checkout is missing; run atlas install first")
 
-  var buildArgs = @[nimBin, "c", "--hints:off"]
+  var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
+  if run:
+    buildArgs.add("-r")
+  buildArgs.add(examplePath)
+
+  withDir rootDir:
+    exec(shellCommand(buildArgs))
+
+proc buildMerendaPanel(run: bool) =
+  let
+    rootDir = thisDir()
+    examplePath = rootDir / "examples" / "merenda_panel.nim"
+    gitBin = requiredTool("TOASTY_GIT", "git")
+    nimBin = requiredTool("TOASTY_NIM", "nim")
+
+  applyLayerShellPatches(rootDir, gitBin)
+
+  var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
   if run:
     buildArgs.add("-r")
   buildArgs.add(examplePath)
@@ -124,9 +188,35 @@ task merendaWindow, "build the minimal Merenda Wayland window":
 task merendaWindowRun, "build and run the minimal Merenda Wayland window":
   buildMerendaWindow(run = true)
 
+task merendaPanel, "build the Merenda Wayland layer-shell panel":
+  buildMerendaPanel(run = false)
+
+task merendaPanelRun, "build and run the Merenda Wayland layer-shell panel":
+  buildMerendaPanel(run = true)
+
 task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
   let
     rootDir = thisDir()
     shellBin = requiredTool("TOASTY_SH", "sh")
     sessionScript = rootDir / "tools" / "session-smoke.sh"
   exec(shellCommand(@[shellBin, sessionScript]))
+
+task panelSmoke, "start the Merenda panel in the GPU WayVNC smoke session":
+  let
+    rootDir = thisDir()
+    shellBin = requiredTool("TOASTY_SH", "sh")
+    sessionScript = rootDir / "tools" / "session-smoke.sh"
+    panelBin = rootDir / "examples" / "merenda_panel"
+
+  buildMerendaPanel(run = false)
+  let
+    hadPanelBin = existsEnv("TOASTY_SESSION_PANEL_BIN")
+    previousPanelBin = getEnv("TOASTY_SESSION_PANEL_BIN")
+  putEnv("TOASTY_SESSION_PANEL_BIN", panelBin)
+  try:
+    exec(shellCommand(@[shellBin, sessionScript]))
+  finally:
+    if hadPanelBin:
+      putEnv("TOASTY_SESSION_PANEL_BIN", previousPanelBin)
+    else:
+      delEnv("TOASTY_SESSION_PANEL_BIN")
