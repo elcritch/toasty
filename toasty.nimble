@@ -10,3 +10,5 @@ requires "gh:greenm01/triad"
 requires "https://github.com/elcritch/merenda#head"
 requires "gh:elcritch/siwin#fix/wayland-initial-configure"
 
+requires "figdraw"
+

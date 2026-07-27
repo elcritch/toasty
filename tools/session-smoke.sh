@@ -24,6 +24,8 @@ wayvnc_pid=
 panel_pid=
 cleaned=0
 
+export NIMKIT_THEME=DarkBSD
+
 fail() {
   printf 'session-smoke: %s\n' "$*" >&2
   exit 1
