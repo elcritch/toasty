@@ -24,6 +24,23 @@ atlas install
 
 Do not use Nimble for dependency resolution.
 
+## Run the Minimal Merenda Window
+
+Build the smallest Merenda window after installing dependencies:
+
+```sh
+nim merendaWindow
+```
+
+Run it from an active Wayland session:
+
+```sh
+nim merendaWindowRun
+```
+
+See [Milestone 2 backend audit](docs/milestone-2.md) for the FreeBSD runtime
+proof, current capability matrix, and layer-shell integration direction.
+
 ## Build Triad on FreeBSD
 
 The `triad` task checks out Triad under `deps/triad`, replays Triad's committed
@@ -114,6 +131,7 @@ nim r tests/ttoasty.nim
 
 - `src/`: Toasty shell modules.
 - `tests/`: deterministic unit tests.
-- `config.nims`: Toasty tests and Atlas-only Triad build tasks.
+- `config.nims`: Toasty tests and Atlas-only build and smoke tasks.
+- `examples/`: focused integration examples.
 - `patches/`: temporary upstream compatibility patches.
 - `tools/`: repeatable development-session tooling.

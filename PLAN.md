@@ -61,13 +61,13 @@ Resolve the largest UI risk early: desktop panels and overlays need layer-shell
 semantics rather than ordinary application windows.
 
 - [x] Add Merenda to `toasty.nimble` through Atlas.
-- [ ] Confirm Merenda's current Siwin backend behavior under River.
-- [ ] Audit support for transparency, undecorated windows, output selection,
+- [x] Confirm Merenda's current Siwin backend behavior under River.
+- [x] Audit support for transparency, undecorated windows, output selection,
       scaling, keyboard interactivity, and pointer input.
-- [ ] Audit support for `wlr-layer-shell`, anchors, margins, exclusive zones,
+- [x] Audit support for `wlr-layer-shell`, anchors, margins, exclusive zones,
       and per-output surfaces.
 - [ ] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
-- [ ] Decide whether layer-shell support belongs in Siwin, Merenda, or a small
+- [x] Decide whether layer-shell support belongs in Siwin, Merenda, or a small
       Toasty Wayland host adapter.
 - [ ] Add a focused test or example for the chosen surface integration.
 
@@ -75,7 +75,7 @@ Exit criteria:
 
 - [ ] A Merenda-rendered panel surface appears on a chosen River output.
 - [ ] The panel reserves space and receives pointer input correctly.
-- [ ] The integration direction is documented before broader UI work starts.
+- [x] The integration direction is documented before broader UI work starts.
 
 ## Milestone 3: Typed Triad IPC Client
 
@@ -163,5 +163,7 @@ Exit criteria:
 ## Immediate Next Step
 
 - [x] Add Merenda to `toasty.nimble` through Atlas.
-- [ ] Resolve and pin a reproducible Merenda dependency graph.
-- [ ] Compile and run the smallest Merenda window on FreeBSD.
+- [x] Confirm Merenda's current Siwin backend behavior under River.
+- [x] Audit support for transparency, input, scaling, and output selection.
+- [x] Audit the existing Siwin and Merenda layer-shell integration.
+- [ ] Build a minimal layer-shell surface with a solid Merenda-rendered panel.

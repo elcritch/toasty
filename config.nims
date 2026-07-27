@@ -89,6 +89,24 @@ proc buildTriad(release: bool) =
     else:
       delEnv("TRIAD_DEV_MODE")
 
+proc buildMerendaWindow(run: bool) =
+  let
+    rootDir = thisDir()
+    merendaDir = rootDir / "deps" / "merenda"
+    examplePath = rootDir / "examples" / "merenda_window.nim"
+    nimBin = requiredTool("TOASTY_NIM", "nim")
+
+  if not dirExists(merendaDir / ".git"):
+    raise newException(OSError, "Merenda checkout is missing; run atlas install first")
+
+  var buildArgs = @[nimBin, "c", "--hints:off"]
+  if run:
+    buildArgs.add("-r")
+  buildArgs.add(examplePath)
+
+  withDir rootDir:
+    exec(shellCommand(buildArgs))
+
 task test, "run unit tests":
   for testFile in listFiles("tests/"):
     if testFile.endsWith(".nim") and testFile.splitFile().name.startsWith("t"):
@@ -99,6 +117,12 @@ task triad, "build the external Triad manager with Atlas":
 
 task triadRelease, "build an optimized external Triad manager with Atlas":
   buildTriad(release = true)
+
+task merendaWindow, "build the minimal Merenda Wayland window":
+  buildMerendaWindow(run = false)
+
+task merendaWindowRun, "build and run the minimal Merenda Wayland window":
+  buildMerendaWindow(run = true)
 
 task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
   let
