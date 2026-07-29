@@ -7,7 +7,7 @@
 
 ## Build, Test, And Development
 - Install deps with Atlas: `atlas install`.
-- Do not use Nimble for dependency resolution in normal development; use Atlas and its generated `deps/` folder and `nim.cfg`.
+- NEVER use Nimble for dependency resolution; use Atlas and its generated `deps/` folder and `nim.cfg`.
 - Run all tests: `nim test`.
 - Run one test: `nim r tests/tnim_repo.nim`.
 
