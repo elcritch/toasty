@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "triad": {
+    "version": 1,
+    "type": "outputs",
+    "outputs": [
+      {
+        "id": 4278190082,
+        "name": "HEADLESS-1",
+        "connected": true,
+        "is_primary": true,
+        "refresh_rate": 60000,
+        "physical_width": 0,
+        "physical_height": 0,
+        "scale": 1.0,
+        "transform": "Normal",
+        "geometry": {"x": 0, "y": 0, "width": 1280, "height": 720}
+      }
+    ]
+  }
+}

@@ -171,6 +171,20 @@ proc buildMerendaPanel(run: bool) =
   withDir rootDir:
     exec(shellCommand(buildArgs))
 
+proc buildTriadProbe(run: bool) =
+  let
+    rootDir = thisDir()
+    examplePath = rootDir / "examples" / "triad_probe.nim"
+    nimBin = requiredTool("TOASTY_NIM", "nim")
+
+  var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
+  if run:
+    buildArgs.add("-r")
+  buildArgs.add(examplePath)
+
+  withDir rootDir:
+    exec(shellCommand(buildArgs))
+
 task test, "run unit tests":
   for testFile in listFiles("tests/"):
     if testFile.endsWith(".nim") and testFile.splitFile().name.startsWith("t"):
@@ -193,6 +207,12 @@ task merendaPanel, "build the Merenda Wayland layer-shell panel":
 
 task merendaPanelRun, "build and run the Merenda Wayland layer-shell panel":
   buildMerendaPanel(run = true)
+
+task triadProbe, "build the typed Triad IPC probe":
+  buildTriadProbe(run = false)
+
+task triadProbeRun, "build and run the typed Triad IPC probe":
+  buildTriadProbe(run = true)
 
 task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
   let

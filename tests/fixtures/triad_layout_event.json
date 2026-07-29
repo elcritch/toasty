@@ -1,0 +1,30 @@
+{
+  "triad": {
+    "version": 1,
+    "event": "layout-state-changed",
+    "state": {
+      "version": 1,
+      "active_tag": 2,
+      "active_workspace_idx": 2,
+      "workspaces": [
+        {
+          "tag_id": 2,
+          "workspace_idx": 2,
+          "name": null,
+          "output": "HEADLESS-1",
+          "layout": "scroller",
+          "layout_kind": "builtin",
+          "runtime_kind": "scrolling",
+          "layout_source": "core",
+          "fallback_layout": "scroller",
+          "is_configured": true,
+          "is_active": true,
+          "is_output_visible": true,
+          "is_urgent": false,
+          "occupied": false,
+          "focused_window_id": null
+        }
+      ]
+    }
+  }
+}

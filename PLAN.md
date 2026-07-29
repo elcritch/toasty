@@ -81,20 +81,20 @@ Exit criteria:
 
 Give Toasty a narrow, testable boundary to the external window manager.
 
-- [ ] Document Triad's native socket discovery and connection lifecycle.
-- [ ] Capture representative workspace, window, output, and event payloads.
-- [ ] Define Toasty types for the shell state actually needed by the UI.
-- [ ] Implement snapshot requests and event subscriptions.
-- [ ] Implement focus, workspace, layout, and window commands.
-- [ ] Add reconnect behavior for Triad restarts and socket replacement.
-- [ ] Keep parsing and transport separate from Merenda views.
-- [ ] Add deterministic parser tests using captured payloads.
-- [ ] Add a fake transport for shell view-model tests.
+- [x] Document Triad's native socket discovery and connection lifecycle.
+- [x] Capture representative workspace, window, output, and event payloads.
+- [x] Define Toasty types for the shell state actually needed by the UI.
+- [x] Implement snapshot requests and event subscriptions.
+- [x] Implement focus, workspace, layout, and window commands.
+- [x] Add reconnect behavior for Triad restarts and socket replacement.
+- [x] Keep parsing and transport separate from Merenda views.
+- [x] Add deterministic parser tests using captured payloads.
+- [x] Add a fake transport for shell view-model tests.
 
 Exit criteria:
 
-- [ ] A command-line Toasty probe prints live outputs, workspaces, and windows.
-- [ ] The probe observes changes and survives a Triad restart.
+- [x] A command-line Toasty probe prints live outputs, workspaces, and windows.
+- [x] The probe observes changes and survives a Triad restart.
 
 ## Milestone 4: First Vertical Slice
 
@@ -167,4 +167,5 @@ Exit criteria:
 - [x] Audit support for transparency, input, scaling, and output selection.
 - [x] Audit the existing Siwin and Merenda layer-shell integration.
 - [x] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
-- [ ] Document Triad's native socket discovery and connection lifecycle.
+- [x] Document Triad's native socket discovery and connection lifecycle.
+- [ ] Show one panel per output.

@@ -1,0 +1,36 @@
+{
+  "triad": {
+    "version": 1,
+    "event": "window-changed",
+    "window": {
+      "id": 4278190084,
+      "pid": 55353,
+      "parent_id": null,
+      "title": "Toasty probe updated",
+      "app_id": "toasty-probe",
+      "tag_id": 2,
+      "workspace_idx": 2,
+      "output": "HEADLESS-1",
+      "position": {"column_idx": 1, "window_idx": 1},
+      "is_focused": true,
+      "is_floating": false,
+      "is_maximized": false,
+      "is_minimized": false,
+      "is_sticky": false,
+      "is_overlay": false,
+      "is_unmanaged_global": false,
+      "is_fullscreen": false,
+      "fullscreen_output": null,
+      "width_proportion": 0.5,
+      "height_proportion": 1.0,
+      "actual_size": {"width": 628, "height": 656},
+      "floating_geometry": {"x": 0, "y": 0, "width": 0, "height": 0},
+      "keyboard_shortcuts_inhibit": false,
+      "idle_inhibit": "none",
+      "is_terminal": true,
+      "allow_swallow": true,
+      "swallowed_by": null,
+      "swallowing": null
+    }
+  }
+}

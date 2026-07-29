@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "triad": {
+    "version": 1,
+    "type": "state",
+    "state": {
+      "version": 1,
+      "capabilities": {},
+      "overview": {"is_open": false, "selected_window_id": null},
+      "layout": {
+        "version": 1,
+        "layouts": [],
+        "layout_cycle": ["scroller", "tile"],
+        "layout_cycle_entries": [],
+        "active_tag": 1,
+        "active_workspace_idx": 1,
+        "workspaces": [
+          {
+            "tag_id": 1,
+            "workspace_idx": 1,
+            "name": "main",
+            "output": "HEADLESS-1",
+            "layout": "tile",
+            "layout_kind": "custom",
+            "runtime_kind": "algorithmic",
+            "layout_source": "bundled-janet",
+            "fallback_layout": "scroller",
+            "is_configured": true,
+            "is_active": true,
+            "is_output_visible": true,
+            "is_urgent": false,
+            "occupied": true,
+            "focused_window_id": 4278190084
+          }
+        ]
+      },
+      "keyboard_layouts": ["us"],
+      "current_keyboard_layout_idx": 0,
+      "outputs": [
+        {
+          "id": 4278190082,
+          "name": "HEADLESS-1",
+          "connected": true,
+          "is_primary": true,
+          "refresh_rate": 60000,
+          "physical_width": 0,
+          "physical_height": 0,
+          "scale": 1.0,
+          "transform": "Normal",
+          "geometry": {"x": 0, "y": 0, "width": 1280, "height": 720}
+        }
+      ],
+      "windows": [
+        {
+          "id": 4278190084,
+          "pid": 55353,
+          "parent_id": null,
+          "title": "Toasty probe",
+          "app_id": "toasty-probe",
+          "tag_id": 1,
+          "workspace_idx": 1,
+          "output": "HEADLESS-1",
+          "position": {"column_idx": 1, "window_idx": 1},
+          "is_focused": true,
+          "is_floating": false,
+          "is_maximized": false,
+          "is_minimized": false,
+          "is_sticky": false,
+          "is_overlay": false,
+          "is_unmanaged_global": false,
+          "is_fullscreen": false,
+          "fullscreen_output": null,
+          "width_proportion": 0.5,
+          "height_proportion": 1.0,
+          "actual_size": {"width": 628, "height": 656},
+          "floating_geometry": {"x": 0, "y": 0, "width": 0, "height": 0},
+          "keyboard_shortcuts_inhibit": false,
+          "idle_inhibit": "none",
+          "is_terminal": true,
+          "allow_swallow": true,
+          "swallowed_by": null,
+          "swallowing": null
+        }
+      ],
+      "capture_sessions": []
+    }
+  }
+}

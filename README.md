@@ -146,6 +146,31 @@ Timestamped logs and command responses are written below
 See [Milestone 1 runtime proof](docs/milestone-1.md) for the recorded FreeBSD
 environment, protocol matrix, and smoke-test evidence.
 
+## Inspect Triad Through Toasty IPC
+
+Build the typed native-IPC probe:
+
+```sh
+nim triadProbe
+```
+
+With Triad running, print its current outputs, workspaces, and windows:
+
+```sh
+./examples/triad_probe
+```
+
+Observe live layout, state, and window changes with automatic reconnects:
+
+```sh
+./examples/triad_probe --watch
+```
+
+The socket is discovered from `TRIAD_SOCKET`, then `XDG_RUNTIME_DIR`, with
+`/tmp/triad.sock` as the fallback. See
+[Milestone 3 typed IPC client](docs/milestone-3.md) for the protocol boundary,
+fixture coverage, options, and live Triad-restart proof.
+
 ## Test
 
 Run the Toasty tests:

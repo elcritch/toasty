@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "triad": {
+    "version": 1,
+    "type": "workspaces",
+    "workspaces": [
+      {
+        "tag_id": 1,
+        "workspace_idx": 1,
+        "name": "main",
+        "output": "HEADLESS-1",
+        "layout": "tile",
+        "layout_kind": "custom",
+        "runtime_kind": "algorithmic",
+        "layout_source": "bundled-janet",
+        "fallback_layout": "scroller",
+        "is_configured": true,
+        "is_active": true,
+        "is_output_visible": true,
+        "is_urgent": false,
+        "occupied": true,
+        "focused_window_id": 4278190084,
+        "columns": [],
+        "frames": [],
+        "bsp_nodes": [],
+        "split_nodes": []
+      },
+      {
+        "tag_id": 2,
+        "workspace_idx": 2,
+        "name": null,
+        "output": "HEADLESS-1",
+        "layout": "scroller",
+        "layout_kind": "builtin",
+        "runtime_kind": "scrolling",
+        "layout_source": "core",
+        "fallback_layout": "scroller",
+        "is_configured": true,
+        "is_active": false,
+        "is_output_visible": false,
+        "is_urgent": false,
+        "occupied": false,
+        "focused_window_id": null,
+        "columns": [],
+        "frames": [],
+        "bsp_nodes": [],
+        "split_nodes": []
+      }
+    ]
+  }
+}
