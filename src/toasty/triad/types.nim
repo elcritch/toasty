@@ -113,6 +113,7 @@ type
     outputs*: seq[TriadOutput]
     workspaces*: seq[TriadWorkspace]
     windows*: seq[TriadWindow]
+    knownOutputs: seq[TriadOutput]
 
 proc initTriadShellState*(snapshot: TriadSnapshot): TriadShellState =
   TriadShellState(
@@ -122,7 +123,34 @@ proc initTriadShellState*(snapshot: TriadSnapshot): TriadShellState =
     outputs: snapshot.outputs,
     workspaces: snapshot.workspaces,
     windows: snapshot.windows,
+    knownOutputs: snapshot.outputs,
   )
+
+proc preserveOutputNames(previous: TriadShellState, updated: var TriadShellState) =
+  updated.knownOutputs = previous.knownOutputs
+  for outputIndex, output in updated.outputs:
+    let placeholder = "river-" & $output.id
+    if output.name == placeholder:
+      for knownOutput in previous.knownOutputs:
+        if knownOutput.id != output.id or knownOutput.name == placeholder:
+          continue
+        updated.outputs[outputIndex].name = knownOutput.name
+        for workspace in updated.workspaces.mitems:
+          if workspace.output == some(placeholder):
+            workspace.output = some(knownOutput.name)
+        for window in updated.windows.mitems:
+          if window.output == some(placeholder):
+            window.output = some(knownOutput.name)
+        break
+    else:
+      var remembered = false
+      for knownIndex, knownOutput in updated.knownOutputs:
+        if knownOutput.id == output.id:
+          updated.knownOutputs[knownIndex] = output
+          remembered = true
+          break
+      if not remembered:
+        updated.knownOutputs.add(output)
 
 proc apply*(state: var TriadShellState, event: TriadEvent) =
   case event.kind
@@ -131,7 +159,9 @@ proc apply*(state: var TriadShellState, event: TriadEvent) =
     state.activeWorkspaceIdx = event.activeWorkspaceIdx
     state.workspaces = event.workspaces
   of tekStateChanged:
-    state = initTriadShellState(event.snapshot)
+    var updated = initTriadShellState(event.snapshot)
+    state.preserveOutputNames(updated)
+    state = move updated
   of tekWindowChanged:
     if event.window.isNone:
       return

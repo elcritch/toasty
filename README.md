@@ -171,6 +171,49 @@ The socket is discovered from `TRIAD_SOCKET`, then `XDG_RUNTIME_DIR`, with
 [Milestone 3 typed IPC client](docs/milestone-3.md) for the protocol boundary,
 fixture coverage, options, and live Triad-restart proof.
 
+## Run the Toasty Panel
+
+Build the subscription-driven panel and its layer-shell dependencies:
+
+```sh
+nim toastyPanel
+```
+
+Run it in an existing River/Triad session:
+
+```sh
+nim toastyPanelRun
+```
+
+The panel creates one connector-name-targeted layer surface per connected
+output. It displays Triad workspaces, marks the active and occupied workspace,
+shows the focused title, and sends native `focus-workspace` actions when a
+workspace is clicked. `NIMKIT_FONT` or `MERENDA_FONT` can override the automatic
+FreeBSD Noto Sans/DejaVu Sans fallback.
+
+Run the complete GPU/WayVNC slice check with one output:
+
+```sh
+TOASTY_SESSION_ONCE=1 nim sliceSmoke
+```
+
+Use two outputs to include the automated secondary-output remove/restore check:
+
+```sh
+TOASTY_SESSION_OUTPUTS=2 TOASTY_SESSION_ONCE=1 nim sliceSmoke
+```
+
+For an interactive run, omit `TOASTY_SESSION_ONCE`. The local RFB helper can
+capture the WayVNC framebuffer and optionally inject a click:
+
+```sh
+nim c tools/rfb_smoke.nim
+tools/rfb_smoke 127.0.0.1 5905 /tmp/toasty-panel.ppm 192 24
+```
+
+See [Milestone 4 first vertical slice](docs/milestone-4.md) for the component
+boundary, hotplug behavior, concurrency notes, and recorded FreeBSD proof.
+
 ## Test
 
 Run the Toasty tests:

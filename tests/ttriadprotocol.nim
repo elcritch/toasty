@@ -52,6 +52,25 @@ suite "Triad IPC protocol":
     check state.windows[0].title == some("Toasty probe updated")
     check state.windows[0].workspaceIdx == some(2'u32)
 
+  test "preserves connector names through a transient output reattach":
+    let snapshot = fixture("triad_state.json").parseSnapshotReply()
+    var state = initTriadShellState(snapshot)
+    var reattached = snapshot
+    let placeholder = "river-" & $reattached.outputs[0].id
+    reattached.outputs[0].name = placeholder
+    reattached.workspaces[0].output = some(placeholder)
+    reattached.windows[0].output = some(placeholder)
+
+    var removed = snapshot
+    removed.outputs.setLen(0)
+    removed.workspaces.setLen(0)
+    state.apply(TriadEvent(kind: tekStateChanged, snapshot: removed))
+    state.apply(TriadEvent(kind: tekStateChanged, snapshot: reattached))
+
+    check state.outputs[0].name == "HEADLESS-1"
+    check state.workspaces[0].output == some("HEADLESS-1")
+    check state.windows[0].output == some("HEADLESS-1")
+
   test "builds versioned snapshot event and command requests":
     let state = parseJson(stateRequest())
     check state["triad"]["version"].getInt() == 1

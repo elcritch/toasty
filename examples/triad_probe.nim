@@ -110,7 +110,7 @@ proc main() =
     return
 
   var received = 0
-  let onEvent = proc(event: TriadEvent) =
+  let onEvent: TriadEventCallback = proc(event: sink TriadEvent) =
     state.apply(event)
     inc received
     echo "event ",

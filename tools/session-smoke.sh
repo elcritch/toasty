@@ -9,10 +9,12 @@ wayvnc_bin=${TOASTY_WAYVNC_BIN:-wayvnc}
 wayland_info_bin=${TOASTY_WAYLAND_INFO_BIN:-wayland-info}
 client_bin=${TOASTY_SESSION_CLIENT:-foot}
 panel_bin=${TOASTY_SESSION_PANEL_BIN:-}
+panel_kind=${TOASTY_SESSION_PANEL_KIND:-generic}
 vnc_address=${TOASTY_VNC_ADDRESS:-127.0.0.1}
 vnc_port=${TOASTY_VNC_PORT:-5905}
 replace_session=${TOASTY_SESSION_REPLACE:-0}
 run_once=${TOASTY_SESSION_ONCE:-0}
+headless_outputs=${TOASTY_SESSION_OUTPUTS:-1}
 
 state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
 log_root=${TOASTY_SESSION_LOG_DIR:-"$state_home/toasty/session-smoke"}
@@ -134,6 +136,21 @@ wait_for_window() {
   fail "Triad did not report the test window app ID: $app_id"
 }
 
+wait_for_log() {
+  pattern=$1
+  path=$2
+  label=$3
+  attempts=0
+  while [ "$attempts" -lt 100 ]; do
+    grep -q "$pattern" "$path" 2>/dev/null && return 0
+    [ -z "$panel_pid" ] || kill -0 "$panel_pid" 2>/dev/null ||
+      fail "the panel exited while waiting for $label"
+    attempts=$((attempts + 1))
+    sleep 0.1
+  done
+  fail "timed out waiting for $label"
+}
+
 protocol_version() {
   interface_name=$1
   sed -n \
@@ -194,7 +211,7 @@ stop_existing_session
 export XDG_RUNTIME_DIR="$runtime_dir"
 export WLR_BACKENDS=headless
 export WLR_RENDERER=gles2
-export WLR_HEADLESS_OUTPUTS=1
+export WLR_HEADLESS_OUTPUTS="$headless_outputs"
 export TRIAD_BIN="$triad_bin"
 export TRIAD_CONFIG="$triad_config"
 export TRIAD_LOG_PATH="$log_dir/triad.log"
@@ -248,6 +265,7 @@ fi
   printf 'XDG_RUNTIME_DIR=%s\n' "$XDG_RUNTIME_DIR"
   printf 'backend=%s\n' "$WLR_BACKENDS"
   printf 'renderer=%s\n' "$WLR_RENDERER"
+  printf 'headless_outputs=%s\n' "$WLR_HEADLESS_OUTPUTS"
   printf 'seat=wl_seat v%s (headless virtual input)\n' "$(protocol_version wl_seat)"
   printf 'vnc_address=%s\n' "$vnc_address"
   printf 'vnc_port=%s\n' "$vnc_port"
@@ -269,12 +287,26 @@ if [ -n "$panel_bin" ]; then
   [ "$attempts" -lt 100 ] ||
     fail "the Merenda panel did not initialize its Vulkan backend"
   printf 'panel_bin=%s\n' "$panel_bin" >>"$log_dir/environment.log"
+  printf 'panel_kind=%s\n' "$panel_kind" >>"$log_dir/environment.log"
+  if [ "$panel_kind" = toasty ]; then
+    wait_for_log 'triad-subscription: connected' "$log_dir/panel.log" \
+      'the Toasty Triad subscription'
+    wait_for_log 'hotkey-overlay: hidden' "$log_dir/panel.log" \
+      'Toasty to hide the Triad hotkey overlay'
+    panel_count=$(grep -c '^panel-created:' "$log_dir/panel.log")
+    [ "$panel_count" -eq "$headless_outputs" ] ||
+      fail "expected $headless_outputs Toasty panels; found $panel_count"
+  fi
 fi
 
 record_command capabilities
 record_command outputs
 record_command spawn "$client_bin" -T Toasty-smoke-one -a toasty-smoke
 wait_for_window toasty-smoke
+if [ "$panel_kind" = toasty ]; then
+  wait_for_log 'panel-state: .*title=Toasty-smoke-one' "$log_dir/panel.log" \
+    'the focused title subscription update'
+fi
 record_command spawn "$client_bin" -T Toasty-smoke-two -a toasty-smoke
 attempts=0
 while [ "$attempts" -lt 100 ]; do
@@ -313,10 +345,18 @@ focused_after=$(run_triad_msg focused-window |
 [ "$focused_after" = "$focused_before" ] ||
   fail "focus-next did not restore the original focused window"
 record_command focus-workspace 2
+if [ "$panel_kind" = toasty ]; then
+  wait_for_log 'panel-state: .*workspace=2 ' "$log_dir/panel.log" \
+    'the workspace 2 subscription update'
+fi
 record_command workspaces
 grep -q '"workspace_idx":2[^}]*"is_active":true' "$log_dir/commands.log" ||
   fail "focus-workspace 2 did not activate workspace 2"
 record_command focus-workspace 1
+if [ "$panel_kind" = toasty ]; then
+  wait_for_log 'panel-state: .*workspace=1 ' "$log_dir/panel.log" \
+    'the workspace 1 subscription update'
+fi
 record_command layout-grid
 record_command layout-state
 grep -q '"layout":"grid"' "$log_dir/commands.log" ||
@@ -325,8 +365,15 @@ record_command layout-tile
 record_command layout-state
 grep -q '"layout":"tile"' "$log_dir/commands.log" ||
   fail "layout-tile did not select the tile layout"
-if [ -n "$panel_bin" ]; then
+if [ -n "$panel_bin" ] && [ "$panel_kind" != toasty ]; then
   record_command hide-hotkey-overlay
+fi
+
+if [ "$panel_kind" = toasty ]; then
+  if grep -qE 'triad-(event|snapshot)-error|workspace-click-error' \
+      "$log_dir/panel.log"; then
+    fail "the Toasty panel reported an IPC or action error"
+  fi
 fi
 
 "$wayvnc_bin" --gpu "$vnc_address" "$vnc_port" \
@@ -344,6 +391,33 @@ while [ "$attempts" -lt 50 ]; do
 done
 [ "$attempts" -lt 50 ] ||
   fail "WayVNC did not listen on $vnc_address:$vnc_port"
+
+if [ "$panel_kind" = toasty ] && [ "$headless_outputs" -gt 1 ]; then
+  panels_before_cycle=$(grep -c '^panel-created:' "$log_dir/panel.log")
+  record_command power-off-monitor HEADLESS-1
+  sleep 0.5
+  kill -0 "$wayvnc_pid" 2>/dev/null ||
+    fail "WayVNC exited when the secondary output was removed"
+  record_command power-on-monitor HEADLESS-1
+  attempts=0
+  while [ "$attempts" -lt 100 ]; do
+    panels_after_cycle=$(grep -c '^panel-created:' "$log_dir/panel.log")
+    if [ "$panels_after_cycle" -gt "$panels_before_cycle" ] &&
+        grep -q '^panel-removed:' "$log_dir/panel.log"; then
+      break
+    fi
+    kill -0 "$panel_pid" 2>/dev/null ||
+      fail "the Toasty panel exited during the output cycle"
+    attempts=$((attempts + 1))
+    sleep 0.1
+  done
+  [ "$attempts" -lt 100 ] ||
+    fail "Toasty did not reconcile the removed and restored output"
+  grep -q '^panel-created: output=river-' "$log_dir/panel.log" &&
+    fail "Toasty exposed a transient River output name"
+  kill -0 "$wayvnc_pid" 2>/dev/null ||
+    fail "WayVNC exited during the output cycle"
+fi
 
 printf '%s\n' \
   "session-smoke: River, Triad, clients, and WayVNC are running." \

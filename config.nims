@@ -185,6 +185,23 @@ proc buildTriadProbe(run: bool) =
   withDir rootDir:
     exec(shellCommand(buildArgs))
 
+proc buildToastyPanel(run: bool) =
+  let
+    rootDir = thisDir()
+    examplePath = rootDir / "examples" / "toasty_panel.nim"
+    gitBin = requiredTool("TOASTY_GIT", "git")
+    nimBin = requiredTool("TOASTY_NIM", "nim")
+
+  applyLayerShellPatches(rootDir, gitBin)
+
+  var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
+  if run:
+    buildArgs.add("-r")
+  buildArgs.add(examplePath)
+
+  withDir rootDir:
+    exec(shellCommand(buildArgs))
+
 task test, "run unit tests":
   for testFile in listFiles("tests/"):
     if testFile.endsWith(".nim") and testFile.splitFile().name.startsWith("t"):
@@ -214,6 +231,12 @@ task triadProbe, "build the typed Triad IPC probe":
 task triadProbeRun, "build and run the typed Triad IPC probe":
   buildTriadProbe(run = true)
 
+task toastyPanel, "build the subscription-driven Toasty panel":
+  buildToastyPanel(run = false)
+
+task toastyPanelRun, "build and run the subscription-driven Toasty panel":
+  buildToastyPanel(run = true)
+
 task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
   let
     rootDir = thisDir()
@@ -240,3 +263,30 @@ task panelSmoke, "start the Merenda panel in the GPU WayVNC smoke session":
       putEnv("TOASTY_SESSION_PANEL_BIN", previousPanelBin)
     else:
       delEnv("TOASTY_SESSION_PANEL_BIN")
+
+task sliceSmoke, "start the subscription-driven panel in the GPU WayVNC session":
+  let
+    rootDir = thisDir()
+    shellBin = requiredTool("TOASTY_SH", "sh")
+    sessionScript = rootDir / "tools" / "session-smoke.sh"
+    panelBin = rootDir / "examples" / "toasty_panel"
+
+  buildToastyPanel(run = false)
+  let
+    hadPanelBin = existsEnv("TOASTY_SESSION_PANEL_BIN")
+    previousPanelBin = getEnv("TOASTY_SESSION_PANEL_BIN")
+    hadPanelKind = existsEnv("TOASTY_SESSION_PANEL_KIND")
+    previousPanelKind = getEnv("TOASTY_SESSION_PANEL_KIND")
+  putEnv("TOASTY_SESSION_PANEL_BIN", panelBin)
+  putEnv("TOASTY_SESSION_PANEL_KIND", "toasty")
+  try:
+    exec(shellCommand(@[shellBin, sessionScript]))
+  finally:
+    if hadPanelBin:
+      putEnv("TOASTY_SESSION_PANEL_BIN", previousPanelBin)
+    else:
+      delEnv("TOASTY_SESSION_PANEL_BIN")
+    if hadPanelKind:
+      putEnv("TOASTY_SESSION_PANEL_KIND", previousPanelKind)
+    else:
+      delEnv("TOASTY_SESSION_PANEL_KIND")

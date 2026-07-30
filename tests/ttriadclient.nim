@@ -20,7 +20,7 @@ suite "Triad IPC client":
     check parseJson(fake.requests[0])["triad"]["request"].getStr() == "state"
 
   test "typed command wrappers send native action requests":
-    let fake = newScriptedTriadTransport(replies = @[Ack, Ack, Ack, Ack, Ack, Ack])
+    let fake = newScriptedTriadTransport(replies = @[Ack, Ack, Ack, Ack, Ack, Ack, Ack])
     let client = newTriadClient("/fake/triad.sock", fake.asTransport())
 
     client.focusWorkspace(2)
@@ -29,8 +29,9 @@ suite "Triad IPC client":
     client.setLayout("tile", workspaceIdx = 3)
     client.switchLayout()
     client.closeWindow(42)
+    client.hideHotkeyOverlay()
 
-    check fake.requests.len == 6
+    check fake.requests.len == 7
     let focusWorkspace = parseJson(fake.requests[0])["triad"]
     check focusWorkspace["action"].getStr() == "focus-workspace"
     check focusWorkspace["workspace_idx"].getInt() == 2
@@ -40,6 +41,23 @@ suite "Triad IPC client":
     check parseJson(fake.requests[3])["triad"]["request"].getStr() == "set-layout"
     check parseJson(fake.requests[4])["triad"]["request"].getStr() == "switch-layout"
     check parseJson(fake.requests[5])["triad"]["action"].getStr() == "close-window"
+    let overlayAction = parseJson(fake.requests[6])["triad"]["action"].getStr()
+    check overlayAction == "hide-hotkey-overlay"
+
+  test "raw observer forwards complete event lines for thread dispatch":
+    let fake =
+      newScriptedTriadTransport(streams = @[@[Ack, fixture("triad_layout_event.json")]])
+    let client = newTriadClient("/fake/triad.sock", fake.asTransport())
+    var lines: seq[string]
+    let onEventLine: TriadEventLineCallback = proc(line: string) =
+      lines.add(line)
+
+    let eventCount = client.observeEventLines(
+      onEventLine = onEventLine, reconnectDelayMs = 0, maxAttempts = 1
+    )
+
+    check eventCount == 1
+    check lines == @[fixture("triad_layout_event.json")]
 
   test "event observer reconnects and continues reducing state":
     let fake = newScriptedTriadTransport(
@@ -55,7 +73,7 @@ suite "Triad IPC client":
       connectionStates: seq[bool]
       errors: seq[string]
 
-    let onEvent = proc(event: TriadEvent) =
+    let onEvent: TriadEventCallback = proc(event: sink TriadEvent) =
       state.apply(event)
     let onConnection = proc(connected: bool, error: string) =
       connectionStates.add(connected)
@@ -83,7 +101,7 @@ suite "Triad IPC client":
     let fake = newScriptedTriadTransport()
     let client = newTriadClient("/fake/triad.sock", fake.asTransport())
     var connectionStates: seq[bool]
-    let onEvent = proc(event: TriadEvent) =
+    let onEvent: TriadEventCallback = proc(event: sink TriadEvent) =
       discard event
     let onConnection = proc(connected: bool, error: string) =
       discard error

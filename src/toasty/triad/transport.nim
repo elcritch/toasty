@@ -1,4 +1,4 @@
-import std/[nativesockets, net, os]
+import std/[nativesockets, net, os, strutils]
 
 const
   DefaultTriadRequestTimeoutMs* = 5000
@@ -83,14 +83,36 @@ proc newUnixTriadTransport*(
       except CatchableError:
         socket.close()
         raise
-      var closed = false
+      var
+        closed = false
+        receiveBuffer = ""
       let receiveLineImpl = proc(timeoutMs: int): string =
         if closed:
           raise newException(IOError, "Triad event stream is closed")
-        result =
-          socket.recvLine(timeout = timeoutMs, maxLength = DefaultTriadMaxLineBytes)
-        if result.len == 0:
-          raise newException(IOError, "Triad event stream disconnected")
+        while true:
+          let newline = receiveBuffer.find('\n')
+          if newline >= 0:
+            result = receiveBuffer[0 ..< newline]
+            if result.endsWith("\r"):
+              result.setLen(result.len - 1)
+            if newline + 1 < receiveBuffer.len:
+              receiveBuffer = receiveBuffer[newline + 1 .. ^1]
+            else:
+              receiveBuffer.setLen(0)
+            return
+          if receiveBuffer.len > DefaultTriadMaxLineBytes:
+            raise newException(IOError, "Triad event line exceeds maximum size")
+          if timeoutMs >= 0:
+            var readSockets = @[socket.getFd()]
+            let ready = selectRead(readSockets, timeoutMs)
+            if ready < 0:
+              raiseOSError(osLastError())
+            if ready == 0:
+              raise newException(TimeoutError, "Triad event receive timed out")
+          let chunk = socket.recv(4096)
+          if chunk.len == 0:
+            raise newException(IOError, "Triad event stream disconnected")
+          receiveBuffer.add(chunk)
       let closeImpl = proc() =
         if not closed:
           closed = true

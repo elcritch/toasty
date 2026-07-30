@@ -100,20 +100,20 @@ Exit criteria:
 
 Build one useful shell component end to end before expanding the desktop.
 
-- [ ] Show one panel per output.
-- [ ] Display workspace names and active state from Triad IPC.
-- [ ] Display the focused application's title.
-- [ ] Focus a workspace when its panel item is clicked.
-- [ ] Update the panel from subscriptions without polling.
-- [ ] Handle output add/remove events.
-- [ ] Apply a basic Merenda theme and FreeBSD-appropriate font fallback.
-- [ ] Disable or avoid overlapping Triad shell overlays.
-- [ ] Verify the slice visually and interactively through WayVNC.
+- [x] Show one panel per output.
+- [x] Display workspace names and active state from Triad IPC.
+- [x] Display the focused application's title.
+- [x] Focus a workspace when its panel item is clicked.
+- [x] Update the panel from subscriptions without polling.
+- [x] Handle output add/remove events.
+- [x] Apply a basic Merenda theme and FreeBSD-appropriate font fallback.
+- [x] Disable or avoid overlapping Triad shell overlays.
+- [x] Verify the slice visually and interactively through WayVNC.
 
 Exit criteria:
 
-- [ ] The panel is usable for workspace navigation during a real River session.
-- [ ] River, Triad, or Toasty can restart independently without losing the
+- [x] The panel is usable for workspace navigation during a real River session.
+- [x] River, Triad, or Toasty can restart independently without losing the
       entire remote session.
 
 ## Milestone 5: Session and Development Workflow
@@ -168,4 +168,4 @@ Exit criteria:
 - [x] Audit the existing Siwin and Merenda layer-shell integration.
 - [x] Build a minimal layer-shell surface with a solid Merenda-rendered panel.
 - [x] Document Triad's native socket discovery and connection lifecycle.
-- [ ] Show one panel per output.
+- [x] Show one panel per output.

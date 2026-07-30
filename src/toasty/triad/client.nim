@@ -1,4 +1,4 @@
-import std/[json, os]
+import std/[json, net, os]
 
 import protocol, transport, types
 
@@ -7,7 +7,8 @@ type
     socketPath*: string
     transport*: TriadTransport
 
-  TriadEventCallback* = proc(event: TriadEvent) {.closure.}
+  TriadEventCallback* = proc(event: sink TriadEvent) {.closure.}
+  TriadEventLineCallback* = proc(line: string) {.closure.}
   TriadConnectionCallback* = proc(connected: bool, error: string) {.closure.}
   TriadStopCallback* = proc(): bool {.closure.}
 
@@ -58,13 +59,17 @@ proc setLayout*(client: TriadClient, layout: string, workspaceIdx = 0'u32) =
 proc switchLayout*(client: TriadClient) =
   client.sendAckRequest(switchLayoutRequest())
 
-proc observe*(
+proc hideHotkeyOverlay*(client: TriadClient) =
+  client.sendAckRequest(actionRequest("hide-hotkey-overlay", []))
+
+proc observeEventLines*(
     client: TriadClient,
-    onEvent: TriadEventCallback,
+    onEventLine: TriadEventLineCallback,
     onConnection: TriadConnectionCallback = nil,
     shouldStop: TriadStopCallback = nil,
     scopes: set[TriadEventScope] = {tesLayout, tesState, tesWindow},
     reconnectDelayMs = 250,
+    receiveTimeoutMs = -1,
     maxAttempts = 0,
 ): int =
   var
@@ -81,19 +86,25 @@ proc observe*(
       lastConnected = connected
 
   while maxAttempts <= 0 or attempts < maxAttempts:
+    if not shouldStop.isNil and shouldStop():
+      return
     inc attempts
     var stream: TriadStream
     try:
       stream =
         client.transport.openStream(client.socketPath, eventStreamRequest(scopes))
-      stream.receiveLine().parseAckReply()
+      stream.receiveLine(receiveTimeoutMs).parseAckReply()
       reportConnection(true, "")
 
       while shouldStop.isNil or not shouldStop():
-        let event = stream.receiveLine().parseEvent()
+        var line: string
+        try:
+          line = stream.receiveLine(receiveTimeoutMs)
+        except TimeoutError:
+          continue
         inc result
-        if not onEvent.isNil:
-          onEvent(event)
+        if not onEventLine.isNil:
+          onEventLine(line)
         if not shouldStop.isNil and shouldStop():
           return
     except CatchableError as error:
@@ -105,3 +116,28 @@ proc observe*(
       break
     if reconnectDelayMs > 0:
       sleep(reconnectDelayMs)
+
+proc observe*(
+    client: TriadClient,
+    onEvent: TriadEventCallback,
+    onConnection: TriadConnectionCallback = nil,
+    shouldStop: TriadStopCallback = nil,
+    scopes: set[TriadEventScope] = {tesLayout, tesState, tesWindow},
+    reconnectDelayMs = 250,
+    receiveTimeoutMs = -1,
+    maxAttempts = 0,
+): int =
+  let onEventLine: TriadEventLineCallback = proc(line: string) =
+    if not onEvent.isNil:
+      var event = line.parseEvent()
+      onEvent(move event)
+
+  client.observeEventLines(
+    onEventLine = onEventLine,
+    onConnection = onConnection,
+    shouldStop = shouldStop,
+    scopes = scopes,
+    reconnectDelayMs = reconnectDelayMs,
+    receiveTimeoutMs = receiveTimeoutMs,
+    maxAttempts = maxAttempts,
+  )

@@ -2,7 +2,7 @@ diff --git a/src/merenda/nimkit/app/backend.nim b/src/merenda/nimkit/app/backend
 index 26adb26..6980899 100644
 --- a/src/merenda/nimkit/app/backend.nim
 +++ b/src/merenda/nimkit/app/backend.nim
-@@ -42,6 +42,38 @@ type
+@@ -42,6 +42,39 @@ type
      remMainThread
      remDedicatedThread
  
@@ -36,12 +36,13 @@ index 26adb26..6980899 100644
 +    exclusiveZone*: int32
 +    keyboardMode*: LayerSurfaceKeyboardMode
 +    output*: int32
++    outputName*: string
 +    namespace*: string
 +
    HostKeyEvent* = object
      event*: events.KeyEvent
      pressed*: bool
-@@ -1526,6 +1558,65 @@ proc createHostWindow*(
+@@ -1526,6 +1559,66 @@ proc createHostWindow*(
    result.xNativeWindow.refreshUiScale(result.xAutoScale)
    result.xReady = true
  
@@ -80,6 +81,7 @@ index 26adb26..6980899 100644
 +      ),
 +      exclusiveZone: config.exclusiveZone,
 +      keyboardMode: siwinshim.LayerSurfaceKeyboardMode(config.keyboardMode.ord),
++      outputName: config.outputName,
 +      namespace: config.namespace,
 +    )
 +    result.xNativeWindow = siwinshim.newSiwinLayerSurfaceWindow(
@@ -185,4 +187,3 @@ index 7111563..673292d 100644
    else:
      window.xHostWindow = createHostWindow(
        window.xFrame, window.xTitle, callbacks, transparent = window.xTransparent
-

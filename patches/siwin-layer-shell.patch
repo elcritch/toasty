@@ -2,7 +2,7 @@ diff --git a/src/siwin/platforms/any/window.nim b/src/siwin/platforms/any/window
 index 624939f..d51238d 100644
 --- a/src/siwin/platforms/any/window.nim
 +++ b/src/siwin/platforms/any/window.nim
-@@ -145,6 +145,37 @@ type
+@@ -145,6 +145,38 @@ type
      constraintAdjustment*: set[PopupConstraintAdjustment]
      reactive*: bool
  
@@ -35,6 +35,7 @@ index 624939f..d51238d 100644
 +    margins*: LayerSurfaceMargins
 +    exclusiveZone*: int32
 +    keyboardMode*: LayerSurfaceKeyboardMode
++    outputName*: string
 +    namespace*: string
 +
    WindowVisualCapability* {.siwin_enum.} = enum
@@ -44,12 +45,13 @@ diff --git a/src/siwin/platforms/wayland/siwinGlobals.nim b/src/siwin/platforms/
 index 86f2fd4..2ad4c31 100644
 --- a/src/siwin/platforms/wayland/siwinGlobals.nim
 +++ b/src/siwin/platforms/wayland/siwinGlobals.nim
-@@ -6,9 +6,14 @@ import ./[libwayland, protocol, bitfields, libdecor]
+@@ -6,9 +6,15 @@ import ./[libwayland, protocol, bitfields, libdecor]
  type
    WaylandExtensionNotFound* = object of CatchableError
  
 +  WaylandOutput* = object
 +    registryName*: uint32
++    name*: string
 +    output*: Wl_output
 +
    SiwinGlobalsWayland* = ref SiwinGlobalsWaylandObj
@@ -76,12 +78,18 @@ index 86f2fd4..2ad4c31 100644
      
      discard wl_display_roundtrip globals.display
  
-@@ -155,6 +163,9 @@ proc initRegistryCallbacks(globals: SiwinGlobalsWayland) =
+@@ -155,6 +164,15 @@ proc initRegistryCallbacks(globals: SiwinGlobalsWayland) =
    addRegistry Wp_cursor_shape_manager_v1:
      globals.cursorShapeManager = binded 
  
 +  addRegistry Wl_output:
 +    globals.outputs.add WaylandOutput(registryName: name, output: binded)
++    let outputRegistryName = name
++    binded.onName:
++      for output in globals.outputs.mitems:
++        if output.registryName == outputRegistryName:
++          output.name = $name
++          break
 +
  
  proc isWaylandAvailable*: bool =
@@ -119,7 +127,7 @@ index 51b9d3b..26f7429 100644
      surface: Wl_surface
      xdgSurface: Xdg_surface
      xdgToplevel: Xdg_toplevel
-@@ -248,16 +250,19 @@ proc refreshKeyboardModifiers(window: WindowWayland) =
+@@ -248,16 +250,25 @@ proc refreshKeyboardModifiers(window: WindowWayland) =
  method swapBuffers(window: WindowWayland) {.base.} = discard
  
  proc screenCountWayland*(globals: SiwinGlobalsWayland): int32 =
@@ -132,6 +140,12 @@ index 51b9d3b..26f7429 100644
    if number notin 0..<globals.screenCountWayland(): raise IndexDefect.newException(&"screen {number} doesn't exist")
    result.id = number.cint
 +  result.output = globals.outputs[number].output
++
++proc screenWayland*(globals: SiwinGlobalsWayland, name: string): ScreenWayland =
++  for number, output in globals.outputs:
++    if output.name == name:
++      return ScreenWayland(id: number.cint, output: output.output)
++  raise IndexDefect.newException(&"screen '{name}' doesn't exist")
  
  proc defaultScreenWayland*(globals: SiwinGlobalsWayland): ScreenWayland =
 -  ScreenWayland(id: 0.cint)
@@ -280,7 +294,7 @@ diff --git a/src/siwin/window.nim b/src/siwin/window.nim
 index de21084..eb97e22 100644
 --- a/src/siwin/window.nim
 +++ b/src/siwin/window.nim
-@@ -148,6 +148,37 @@ when not siwin_use_lib:
+@@ -148,6 +148,39 @@ when not siwin_use_lib:
      elif defined(macosx):
        result = newPopupWindowCocoa(parent.WindowCocoa, placement, transparent, grab)
  
@@ -299,7 +313,9 @@ index de21084..eb97e22 100644
 +          size = size,
 +          title = title,
 +          screen =
-+            if screen == -1:
++            if config.outputName.len > 0:
++              waylandGlobals.screenWayland(config.outputName)
++            elif screen == -1:
 +              waylandGlobals.defaultScreenWayland()
 +            else:
 +              waylandGlobals.screenWayland(screen),
