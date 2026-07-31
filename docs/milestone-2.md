@@ -3,9 +3,9 @@
 This record describes the source audit and FreeBSD runtime proof completed on
 2026-07-27 (2026-07-26 UTC).
 
-## Validated revisions
+## Original proof revisions
 
-The current FreeBSD build uses these revisions:
+The original FreeBSD proof used these revisions:
 
 ```text
 Merenda bac6419af62cdaeaba60e774268126fbb346e7a8
@@ -21,9 +21,10 @@ returns and Merenda stores the new host. The result was a deterministic null
 dereference in `Window.syncNativeGeometry`.
 
 The Merenda checkout includes the upstream callback readiness fix first
-validated at `ad66901a`. Toasty carries small temporary layer-shell patches for
-Siwin, FigDraw, and Merenda in `patches/`; `nim merendaPanel` checks and applies
-them idempotently.
+validated at `ad66901a`. Layer-shell support has since moved onto the linked
+Siwin, FigDraw, and Merenda `toasty-updates` branches. FigDraw now selects
+Siwin's renderer-specific Vulkan or OpenGL layer-surface constructor, and
+Toasty no longer applies local UI-backend patches before building.
 
 ## Ordinary-window baseline
 
@@ -90,16 +91,19 @@ The integration follows the ownership boundaries discovered in the audit:
 ```text
 Toasty PanelConfig
   -> Merenda newLayerSurfaceWindow
-  -> FigDraw newSiwinLayerSurfaceWindow
-  -> Siwin newLayerSurfaceWindow
+  -> FigDraw newSiwinLayerSurfaceWindow(renderer, ...)
+  -> Siwin newVulkanLayerSurfaceWindow or newOpenglLayerSurfaceWindow
   -> zwlr_layer_shell_v1
 ```
 
 Siwin now owns the public platform API for layer, anchors, margins, exclusive
 zone, keyboard mode, namespace, and output. FigDraw bridges that API to its
-Vulkan-capable Siwin window. Merenda exposes it as a normal host-window kind,
-and Toasty supplies desktop policy through its backend-independent
-`PanelConfig`. No dependency private fields are accessed from Toasty.
+renderer-selected Siwin window. Merenda creates the renderer before the native
+layer surface so Vulkan can provide its instance during window creation;
+OpenGL uses Siwin's EGL-backed window. Merenda exposes the result as a normal
+host-window kind, and Toasty supplies desktop policy through its
+backend-independent `PanelConfig`. No dependency private fields are accessed
+from Toasty.
 
 The focused example is `examples/merenda_panel.nim`; deterministic validation
 of its policy configuration lives in `tests/tpanelconfig.nim`. Reproduce the
@@ -111,5 +115,4 @@ TOASTY_SESSION_ONCE=1 nim panelSmoke
 ```
 
 Milestone 2 is complete. Non-1x scaling and multi-output/hotplug behavior remain
-explicit follow-up coverage for the later multi-monitor milestone, and the
-three temporary backend patches should be proposed upstream.
+explicit follow-up coverage for the later multi-monitor milestone.

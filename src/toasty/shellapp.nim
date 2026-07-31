@@ -136,7 +136,6 @@ proc createPanelHost(controller: PanelController, model: PanelViewModel): PanelH
       exclusiveZone: config.height + config.margin,
       keyboardMode: lskNone,
       output: config.output,
-      outputName: model.outputName,
       namespace: config.namespace,
     )
     window = newLayerSurfaceWindow(

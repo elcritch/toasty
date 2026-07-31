@@ -39,27 +39,6 @@ proc applyFreeBsdPatch(gitBin, triadDir, patchPath: string) =
   let fsnotifyDir = triadDir / "deps" / "fsnotify"
   applyPatch(gitBin, fsnotifyDir, patchPath, "the FreeBSD fsnotify")
 
-proc applyLayerShellPatches(rootDir, gitBin: string) =
-  for entry in [
-    ("siwin", "siwin-layer-shell.patch"),
-    ("figdraw", "figdraw-layer-shell.patch"),
-    ("merenda", "merenda-layer-shell.patch"),
-  ]:
-    let
-      dependency = entry[0]
-      patchName = entry[1]
-      dependencyDir = rootDir / "deps" / dependency
-    if not dirExists(dependencyDir / ".git"):
-      raise newException(
-        OSError, dependency & " checkout is missing; run atlas install first"
-      )
-    applyPatch(
-      gitBin,
-      dependencyDir,
-      rootDir / "patches" / patchName,
-      "the " & dependency & " layer-shell",
-    )
-
 proc buildTriad(release: bool) =
   let
     rootDir = thisDir()
@@ -158,10 +137,7 @@ proc buildMerendaPanel(run: bool) =
   let
     rootDir = thisDir()
     examplePath = rootDir / "examples" / "merenda_panel.nim"
-    gitBin = requiredTool("TOASTY_GIT", "git")
     nimBin = requiredTool("TOASTY_NIM", "nim")
-
-  applyLayerShellPatches(rootDir, gitBin)
 
   var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
   if run:
@@ -189,10 +165,7 @@ proc buildToastyPanel(run: bool) =
   let
     rootDir = thisDir()
     examplePath = rootDir / "examples" / "toasty_panel.nim"
-    gitBin = requiredTool("TOASTY_GIT", "git")
     nimBin = requiredTool("TOASTY_NIM", "nim")
-
-  applyLayerShellPatches(rootDir, gitBin)
 
   var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
   if run:

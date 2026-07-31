@@ -2,7 +2,7 @@
 
 Milestone 4 turns the typed Triad client and Merenda layer-shell backend into a
 usable panel. The executable is `examples/toasty_panel.nim`; `nim toastyPanel`
-builds it after applying the temporary Siwin and Merenda integration patches.
+builds it with the linked Siwin, FigDraw, and Merenda layer-shell APIs.
 
 ## Component boundary
 
@@ -14,9 +14,9 @@ fallbacks.
 
 `src/toasty/shellapp.nim` owns the Merenda views. It reconciles layer-surface
 hosts by Triad output ID, rebuilds workspace controls after state changes, and
-sends `focus-workspace` through the typed client. Layer surfaces are targeted
-by the Wayland `wl_output.name`, not registry order; this keeps panels on the
-correct connector when an output disappears and returns in a different order.
+sends `focus-workspace` through the typed client. Connector names remain the
+state and display identity, while the renderer-specific native layer surface
+is selected with the output's current zero-based index.
 
 The Triad observer runs on one Sigils worker. It blocks on Triad's native event
 stream and transfers owned `TriadEvent` and `TriadSnapshot` values through a
@@ -35,8 +35,9 @@ exposed and the new buffered transport avoids.
 State events can briefly identify a returning connector as `river-<id>` before
 Triad restores its `wl_output` name. The reducer retains known output metadata
 across removal and rewrites matching workspace and window references, so the
-panel never exposes that transient identity. The Siwin integration also tracks
-the compositor's output-name event and chooses the layer-shell target by name.
+panel never exposes that transient identity. Removing an output closes its
+host; restoring it creates a new host after connected outputs have been
+reindexed.
 
 Every successful subscription refreshes the full snapshot. Toasty therefore
 reconstructs current state after Triad's socket is replaced instead of relying
@@ -81,8 +82,16 @@ Run `20260729T020411Z` used FreeBSD 15.1, River 0.4.5, WayVNC 0.10.1 with
 It created 1280x48 Vulkan layer surfaces for `HEADLESS-2` and `HEADLESS-1`,
 observed focused-title and workspace 1/2 changes, hid the Triad hotkey overlay,
 and reserved the expected 48-pixel exclusive zone. The automated power cycle
-removed and recreated the `HEADLESS-1` panel by connector name while Toasty,
-River, and WayVNC remained alive.
+removed and recreated the `HEADLESS-1` panel while Toasty, River, and WayVNC
+remained alive. That proof used the earlier connector-name-targeted backend.
+
+The renderer-specific output-index path was revalidated in two one-shot runs
+on 2026-07-30 MDT. Run `20260731T022624Z` created independent 1280x48 Vulkan
+mailbox swapchains for `HEADLESS-2` and `HEADLESS-1` through
+`VK_KHR_wayland_surface`; the secondary output was removed and recreated at
+index 1 without panel or IPC errors. Run `20260731T022826Z` forced FigDraw's
+OpenGL path, created an AMD Radeon EGL/OpenGL ES 3.2 context, reserved the same
+48-pixel exclusive zone, and passed the complete one-output smoke sequence.
 
 The final interactive proof is under run `20260729T020523Z`. The RFB 3.8 helper
 captured the 1280x720 WayVNC framebuffer, visibly showing the output label,

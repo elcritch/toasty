@@ -43,8 +43,8 @@ proof, current capability matrix, and layer-shell integration direction.
 
 ## Run the Merenda Panel
 
-Build the solid layer-shell panel. This applies the temporary Siwin, FigDraw,
-and Merenda integration patches idempotently before compiling:
+Build the solid layer-shell panel with the renderer-specific Siwin Vulkan or
+OpenGL layer-surface window selected by FigDraw:
 
 ```sh
 nim merendaPanel
@@ -185,8 +185,9 @@ Run it in an existing River/Triad session:
 nim toastyPanelRun
 ```
 
-The panel creates one connector-name-targeted layer surface per connected
-output. It displays Triad workspaces, marks the active and occupied workspace,
+The panel creates one layer surface per connected output, using the current
+zero-based output index while retaining connector names for panel identity and
+labels. It displays Triad workspaces, marks the active and occupied workspace,
 shows the focused title, and sends native `focus-workspace` actions when a
 workspace is clicked. `NIMKIT_FONT` or `MERENDA_FONT` can override the automatic
 FreeBSD Noto Sans/DejaVu Sans fallback.
@@ -201,6 +202,12 @@ Use two outputs to include the automated secondary-output remove/restore check:
 
 ```sh
 TOASTY_SESSION_OUTPUTS=2 TOASTY_SESSION_ONCE=1 nim sliceSmoke
+```
+
+Force the EGL/OpenGL layer-surface path instead of Vulkan with:
+
+```sh
+FIGDRAW_FORCE_OPENGL=1 TOASTY_SESSION_ONCE=1 nim sliceSmoke
 ```
 
 For an interactive run, omit `TOASTY_SESSION_ONCE`. The local RFB helper can
@@ -234,5 +241,5 @@ nim r tests/ttoasty.nim
 - `tests/`: deterministic unit tests.
 - `config.nims`: Toasty tests and Atlas-only build and smoke tasks.
 - `examples/`: focused integration examples.
-- `patches/`: temporary upstream compatibility patches.
+- `patches/`: temporary FreeBSD compatibility patches for external components.
 - `tools/`: repeatable development-session tooling.

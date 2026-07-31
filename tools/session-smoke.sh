@@ -24,6 +24,7 @@ runtime_dir=
 river_pid=
 wayvnc_pid=
 panel_pid=
+panel_renderer=
 cleaned=0
 
 export NIMKIT_THEME=DarkBSD
@@ -279,15 +280,21 @@ if [ -n "$panel_bin" ]; then
     kill -0 "$panel_pid" 2>/dev/null ||
       fail "the Merenda panel exited during startup; inspect $log_dir/panel.log"
     if grep -q 'Created Vulkan swapchain' "$log_dir/panel.log" 2>/dev/null; then
+      panel_renderer=vulkan
+      break
+    fi
+    if grep -q 'Selecting OpenGL shader profile' "$log_dir/panel.log" 2>/dev/null; then
+      panel_renderer=opengl
       break
     fi
     attempts=$((attempts + 1))
     sleep 0.1
   done
   [ "$attempts" -lt 100 ] ||
-    fail "the Merenda panel did not initialize its Vulkan backend"
+    fail "the Merenda panel did not initialize its Vulkan or OpenGL backend"
   printf 'panel_bin=%s\n' "$panel_bin" >>"$log_dir/environment.log"
   printf 'panel_kind=%s\n' "$panel_kind" >>"$log_dir/environment.log"
+  printf 'panel_renderer=%s\n' "$panel_renderer" >>"$log_dir/environment.log"
   if [ "$panel_kind" = toasty ]; then
     wait_for_log 'triad-subscription: connected' "$log_dir/panel.log" \
       'the Toasty Triad subscription'
