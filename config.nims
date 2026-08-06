@@ -42,12 +42,17 @@ proc applyFreeBsdPatch(gitBin, triadDir, patchPath: string) =
 proc buildTriad(release: bool) =
   let
     rootDir = thisDir()
-    triadDir = getEnv("TOASTY_TRIAD_DIR", rootDir / "deps" / "triad")
+    existingTriadDir = rootDir / "deps" / "triad"
+    defaultTriadDir =
+      if dirExists(existingTriadDir): existingTriadDir
+      else: rootDir / "external" / "triad"
+    triadDir = getEnv("TOASTY_TRIAD_DIR", defaultTriadDir)
     patchPath = rootDir / "patches" / "fsnotify-freebsd.patch"
     atlasBin = requiredTool("TOASTY_ATLAS", "atlas")
     atlasRunBin = requiredTool("TOASTY_ATLAS_RUN", "atlas-run")
     gitBin = requiredTool("TOASTY_GIT", "git")
     nimBin = requiredTool("TOASTY_NIM", "nim")
+    lockPath = triadDir / "nimble.lock"
 
   if not dirExists(triadDir):
     mkDir(parentDir(triadDir))
@@ -62,18 +67,38 @@ proc buildTriad(release: bool) =
     withDir triadDir:
       exec(shellCommand(@[atlasBin, "init"]))
 
-  withDir triadDir:
-    exec(
-      shellCommand(
-        @[
-          atlasBin,
-          "--project=" & triadDir,
-          "--noexec",
-          "rep",
-          triadDir / "nimble.lock",
-        ]
+  let lock = parseJson(readFile(lockPath))
+  var missingDependency = false
+  for dependency, _ in lock["packages"]:
+    if dependency != "nim" and not dirExists(triadDir / "deps" / dependency):
+      missingDependency = true
+
+  if missingDependency:
+    withDir triadDir:
+      exec(
+        shellCommand(
+          @[
+            atlasBin,
+            "--packagesRepo",
+            "--noexec",
+            "rep",
+            lockPath.extractFilename,
+          ]
+        )
       )
-    )
+  else:
+    withDir triadDir:
+      exec(
+        shellCommand(
+          @[atlasBin, "--project=" & triadDir, "--noexec", "rep", lockPath]
+        )
+      )
+
+  for dependency, _ in lock["packages"]:
+    if dependency != "nim" and not dirExists(triadDir / "deps" / dependency):
+      raise newException(
+        OSError, "Atlas did not materialize Triad dependency: " & dependency
+      )
 
   when defined(freebsd):
     applyFreeBsdPatch(gitBin, triadDir, patchPath)
@@ -87,7 +112,6 @@ proc buildTriad(release: bool) =
       "--",
       "--hints:off",
     ]
-  let lock = parseJson(readFile(triadDir / "nimble.lock"))
   for dependency, _ in lock["packages"]:
     if dependency == "nim":
       continue
@@ -161,19 +185,35 @@ proc buildTriadProbe(run: bool) =
   withDir rootDir:
     exec(shellCommand(buildArgs))
 
-proc buildToastyPanel(run: bool) =
+proc buildToastyPanel(run: bool, release = false) =
   let
     rootDir = thisDir()
     examplePath = rootDir / "examples" / "toasty_panel.nim"
     nimBin = requiredTool("TOASTY_NIM", "nim")
 
   var buildArgs = @[nimBin, "c", "--hints:off", "--path:" & rootDir / "src"]
+  if release:
+    buildArgs.add("-d:release")
+    buildArgs.add("--opt:speed")
   if run:
     buildArgs.add("-r")
   buildArgs.add(examplePath)
 
   withDir rootDir:
     exec(shellCommand(buildArgs))
+
+proc runToastySession(release, check: bool) =
+  let
+    rootDir = thisDir()
+    shellBin = requiredTool("TOASTY_SH", "sh")
+    scriptName =
+      if check: "session-check.sh"
+      else: "session.sh"
+    sessionScript = rootDir / "tools" / scriptName
+
+  buildTriad(release)
+  buildToastyPanel(run = false, release = release)
+  exec(shellCommand(@[shellBin, sessionScript]))
 
 task test, "run unit tests":
   for testFile in listFiles("tests/"):
@@ -209,6 +249,15 @@ task toastyPanel, "build the subscription-driven Toasty panel":
 
 task toastyPanelRun, "build and run the subscription-driven Toasty panel":
   buildToastyPanel(run = true)
+
+task sessionDev, "build and run the supervised development session":
+  runToastySession(release = false, check = false)
+
+task sessionRelease, "build and run the supervised release session":
+  runToastySession(release = true, check = false)
+
+task sessionCheck, "verify supervised component restarts and clean shutdown":
+  runToastySession(release = false, check = true)
 
 task sessionSmoke, "start the River, Triad, and WayVNC smoke session":
   let

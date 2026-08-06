@@ -6,7 +6,6 @@ srcDir        = "src"
 
 requires "nim >= 2.2.6"
 
-requires "gh:greenm01/triad"
-requires "gh:elcritch/merenda#toasty-updates"
-requires "gh:elcritch/figdraw#toasty-updates"
-requires "gh:elcritch/siwin#toasty-updates"
+requires "https://github.com/elcritch/merenda#toasty-updates"
+requires "figdraw#toasty-updates"
+requires "https://github.com/elcritch/siwin#toasty-updates"

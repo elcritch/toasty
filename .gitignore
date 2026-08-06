@@ -4,6 +4,7 @@
 
 # Atlas/Nim dependency and generated config state.
 deps/
+external/
 nim.cfg
 nimble.develop
 nimble.paths
@@ -21,4 +22,3 @@ tests/output/
 .tool-versions
 .env
 .env.*
-

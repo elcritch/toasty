@@ -118,15 +118,15 @@ Exit criteria:
 
 ## Milestone 5: Session and Development Workflow
 
-- [ ] Define launch order and readiness checks for River, Triad, and Toasty.
-- [ ] Give each process a separate log file under the XDG state directory.
-- [ ] Forward termination signals and shut down children cleanly.
-- [ ] Add bounded restart behavior for Triad and Toasty.
-- [ ] Add development and release session tasks.
-- [ ] Preserve WayVNC access while replacing individual components.
-- [ ] Add a FreeBSD session entry or equivalent login command.
-- [ ] Document required FreeBSD packages and runtime services.
-- [ ] Reproduce the environment from a clean Toasty checkout.
+- [x] Define launch order and readiness checks for River, Triad, and Toasty.
+- [x] Give each process a separate log file under the XDG state directory.
+- [x] Forward termination signals and shut down children cleanly.
+- [x] Add bounded restart behavior for Triad and Toasty.
+- [x] Add development and release session tasks.
+- [x] Preserve WayVNC access while replacing individual components.
+- [x] Add a FreeBSD session entry or equivalent login command.
+- [x] Document required FreeBSD packages and runtime services.
+- [x] Reproduce the environment from a clean Toasty checkout.
 
 ## Milestone 6: Desktop Shell Features
 
@@ -153,12 +153,12 @@ Exit criteria:
 
 ## MVP Definition
 
-- [ ] One command starts River, Triad, Toasty, and the remote-view path.
-- [ ] The session is visible and controllable through WayVNC.
-- [ ] A Merenda panel shows outputs, workspaces, and the focused window.
-- [ ] Workspace switching works through Toasty and Triad's native IPC.
-- [ ] The three main processes can restart independently.
-- [ ] A clean FreeBSD checkout builds with Atlas only.
+- [x] One command starts River, Triad, Toasty, and the remote-view path.
+- [x] The session is visible and controllable through WayVNC.
+- [x] A Merenda panel shows outputs, workspaces, and the focused window.
+- [x] Workspace switching works through Toasty and Triad's native IPC.
+- [x] The three main processes can restart independently.
+- [x] A clean FreeBSD checkout builds with Atlas only.
 
 ## Immediate Next Step
 

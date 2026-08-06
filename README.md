@@ -4,8 +4,8 @@ Toasty is a FreeBSD-first Wayland desktop built with
 [Merenda](https://github.com/elcritch/merenda). River provides the compositor,
 Triad manages windows, and Toasty provides the visible desktop shell.
 
-The project is currently in its bootstrap stage. The first milestone is a
-repeatable FreeBSD development session with these independent processes:
+The project currently provides a supervised FreeBSD development session with
+these independent processes:
 
 ```text
 river  <->  triad  <->  toasty
@@ -23,6 +23,12 @@ atlas install
 ```
 
 Do not use Nimble for dependency resolution.
+If the JSON package index is temporarily unavailable, Atlas can use its full
+package-repository fallback:
+
+```sh
+atlas --packagesRepo install
+```
 
 ## Run the Minimal Merenda Window
 
@@ -76,12 +82,19 @@ For an optimized build:
 nim triadRelease
 ```
 
-The binaries are written to:
+An existing `deps/triad` checkout is reused for compatibility with older
+development trees. A clean checkout keeps the external manager outside
+Toasty's Atlas graph under `external/triad`. The binaries are therefore
+written to one of:
 
 ```text
 deps/triad/triad
 deps/triad/triad_niri
 deps/triad/triad_mirror
+
+external/triad/triad
+external/triad/triad_niri
+external/triad/triad_mirror
 ```
 
 The task intentionally uses `atlas rep nimble.lock`: Atlas can replay the
@@ -93,11 +106,50 @@ upstream task bodies currently invoke Nimble.
 To update the Triad checkout:
 
 ```sh
-git -C deps/triad pull --ff-only
+git -C external/triad pull --ff-only
 nim triad
 ```
 
-The task does not update it automatically, protecting any local Triad work.
+Use `deps/triad` in that command for an older tree. The task does not update
+the checkout automatically, protecting any local Triad work.
+
+## Run the Supervised FreeBSD Session
+
+Build and run the foreground development session:
+
+```sh
+nim sessionDev
+```
+
+Use optimized Triad and Toasty builds for the release-shaped session:
+
+```sh
+nim sessionRelease
+```
+
+The supervisor starts River, waits for Triad IPC, starts WayVNC on
+`127.0.0.1:5905`, and starts Toasty only after the display and remote endpoint
+are ready. Triad and Toasty have bounded restart loops; River and WayVNC remain
+stable while either component is replaced. Every process has a separate log
+below `~/.local/state/toasty/session/`.
+
+Run the live restart and clean-shutdown integration check with:
+
+```sh
+nim sessionCheck
+```
+
+For an SSH or display-manager login command tied to the checkout, use:
+
+```sh
+~/projs/toasty/tools/toasty-session.sh
+```
+
+The session refuses to replace an existing graphical session unless
+`TOASTY_SESSION_REPLACE=1` is set. See
+[Milestone 5 session workflow](docs/milestone-5.md) for launch order,
+readiness, restart controls, PID files, FreeBSD packages and services, and
+clean-checkout reproduction.
 
 ## Run the FreeBSD Session Smoke Test
 
