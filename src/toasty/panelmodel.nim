@@ -15,6 +15,8 @@ type
     outputName*: string
     outputIndex*: int32
     outputWidth*: int32
+    outputHeight*: int32
+    outputScale*: float32
     connected*: bool
     workspaces*: seq[WorkspaceItem]
     focusedTitle*: string
@@ -35,6 +37,12 @@ proc focusedTitle(state: TriadShellState): string =
       return window.appId.get().strip()
   "Desktop"
 
+func logicalDimension(value: int32, scale: float32): int32 =
+  if scale > 0.0:
+    max(1, (value.float32 / scale).int32)
+  else:
+    max(1, value)
+
 proc panelViewModels*(state: TriadShellState, connected = true): seq[PanelViewModel] =
   let title = state.focusedTitle()
   var outputIndex = 0'i32
@@ -45,7 +53,9 @@ proc panelViewModels*(state: TriadShellState, connected = true): seq[PanelViewMo
       outputId: output.id,
       outputName: output.name,
       outputIndex: outputIndex,
-      outputWidth: output.geometry.width,
+      outputWidth: logicalDimension(output.geometry.width, output.scale),
+      outputHeight: logicalDimension(output.geometry.height, output.scale),
+      outputScale: output.scale,
       connected: connected,
       focusedTitle: title,
     )

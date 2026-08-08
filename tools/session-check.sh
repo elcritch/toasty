@@ -134,6 +134,10 @@ river_pid=$(read_pid "$active_dir/river.pid")
 wayvnc_pid=$(read_pid "$active_dir/wayvnc.pid")
 triad_pid=$(read_pid "$active_dir/triad.pid")
 toasty_pid=$(read_pid "$active_dir/toasty.pid")
+dbus_pid=
+if [ -f "$active_dir/dbus.pid" ]; then
+  dbus_pid=$(read_pid "$active_dir/dbus.pid")
+fi
 
 connections_before=$(grep -c 'triad-subscription: connected' \
   "$active_dir/toasty.log")
@@ -142,6 +146,9 @@ new_triad_pid=$(wait_for_new_pid "$active_dir/triad.pid" "$triad_pid")
 wait_for_more_connections "$connections_before"
 assert_stable_pid River "$active_dir/river.pid" "$river_pid"
 assert_stable_pid WayVNC "$active_dir/wayvnc.pid" "$wayvnc_pid"
+if [ -n "$dbus_pid" ]; then
+  assert_stable_pid D-Bus "$active_dir/dbus.pid" "$dbus_pid"
+fi
 
 kill "$toasty_pid"
 new_toasty_pid=$(wait_for_new_pid "$active_dir/toasty.pid" "$toasty_pid")
@@ -151,6 +158,9 @@ ready_toasty_pid=$(read_pid "$active_dir/toasty.ready")
   fail "Toasty PID changed before completing readiness"
 assert_stable_pid River "$active_dir/river.pid" "$river_pid"
 assert_stable_pid WayVNC "$active_dir/wayvnc.pid" "$wayvnc_pid"
+if [ -n "$dbus_pid" ]; then
+  assert_stable_pid D-Bus "$active_dir/dbus.pid" "$dbus_pid"
+fi
 
 kill "$session_pid"
 session_status=0
@@ -160,7 +170,7 @@ session_pid=
   fail "the supervisor returned status $session_status during shutdown"
 
 for stopped_pid in \
-  "$river_pid" "$wayvnc_pid" "$new_triad_pid" "$new_toasty_pid"; do
+  "$river_pid" "$wayvnc_pid" "$new_triad_pid" "$new_toasty_pid" $dbus_pid; do
   process_is_running "$stopped_pid" &&
     fail "component PID $stopped_pid survived session shutdown"
 done
@@ -171,5 +181,6 @@ printf '%s\n' \
   "session-check: Triad restarted $triad_pid -> $new_triad_pid" \
   "session-check: Toasty restarted $toasty_pid -> $new_toasty_pid" \
   "session-check: River and WayVNC stayed at $river_pid and $wayvnc_pid" \
+  "session-check: the D-Bus notification bus stayed at ${dbus_pid:-external}" \
   "session-check: clean signal shutdown passed" \
   "session-check: logs: $check_dir"

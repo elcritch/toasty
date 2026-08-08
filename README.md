@@ -273,6 +273,41 @@ tools/rfb_smoke 127.0.0.1 5905 /tmp/toasty-panel.ppm 192 24
 See [Milestone 4 first vertical slice](docs/milestone-4.md) for the component
 boundary, hotplug behavior, concurrency notes, and recorded FreeBSD proof.
 
+## Use the Desktop Shell
+
+The supervised session starts the complete Toasty shell. Its panel exposes the
+application palette, Triad overview, recent-window switcher, notification
+center, quick settings, and guarded session actions:
+
+```sh
+nim sessionDev
+```
+
+Click **Apps** and type to search installed XDG applications, Toasty commands,
+and open Triad windows. Press `Return` to run the first match. Native Merenda
+focus traversal supports `Tab`, `Shift-Tab`, and `Return` throughout the shell.
+
+To exercise the notification daemon from the same session bus:
+
+```sh
+notify-send "Toasty" "The notification center is online"
+```
+
+Set a wallpaper before starting the session with
+`TOASTY_WALLPAPER=/absolute/path/to/image`. Toasty creates one background and
+one panel layer surface per connected output, uses each output's logical size,
+and reconciles those surfaces when Triad reports hotplug changes.
+
+On FreeBSD, quick settings use `mixer`, `route`, and `backlight` when available.
+Session actions use `waylock` or `swaylock`, the Toasty supervisor, `zzz`, and
+`shutdown`; unavailable or unauthorized actions remain disabled. Every command
+can be replaced with `TOASTY_LOCK_COMMAND`, `TOASTY_LOGOUT_COMMAND`,
+`TOASTY_RESTART_COMMAND`, `TOASTY_SUSPEND_COMMAND`, or
+`TOASTY_POWEROFF_COMMAND`.
+
+See [Milestone 6 desktop shell](docs/milestone-6.md) for architecture,
+configuration, keyboard behavior, and recorded FreeBSD/WayVNC validation.
+
 ## Test
 
 Run the Toasty tests:

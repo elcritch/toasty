@@ -5,7 +5,7 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 nim_bin=${TOASTY_NIM:-}
 atlas_bin_dir=${TOASTY_ATLAS_BIN_DIR:-"$HOME/.nimble/bin"}
 
-PATH="$atlas_bin_dir:/usr/local/nim/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+PATH="$atlas_bin_dir:/usr/local/nim/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 export PATH
 
 if [ -z "$nim_bin" ]; then

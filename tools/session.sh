@@ -15,6 +15,7 @@ toasty_bin=${TOASTY_TOASTY_BIN:-"$project_dir/examples/toasty_panel"}
 river_bin=${TOASTY_RIVER_BIN:-river}
 wayvnc_bin=${TOASTY_WAYVNC_BIN:-wayvnc}
 wayland_info_bin=${TOASTY_WAYLAND_INFO_BIN:-wayland-info}
+dbus_daemon_bin=${TOASTY_DBUS_DAEMON_BIN:-dbus-daemon}
 vnc_address=${TOASTY_VNC_ADDRESS:-127.0.0.1}
 vnc_port=${TOASTY_VNC_PORT:-5905}
 replace_session=${TOASTY_SESSION_REPLACE:-0}
@@ -34,6 +35,7 @@ runtime_base=${TMPDIR:-/tmp}
 river_pid=
 wayvnc_pid=
 toasty_pid=
+dbus_pid=
 toasty_started_at=0
 toasty_failures=0
 runtime_dir=
@@ -178,12 +180,14 @@ cleanup() {
   fi
   terminate_process "Triad supervisor" "$triad_supervisor_pid"
   terminate_process River "$river_pid"
+  terminate_process "D-Bus session" "$dbus_pid"
 
   rm -f -- \
     "$log_dir/session.pid" \
     "$log_dir/river.pid" \
     "$log_dir/wayvnc.pid" \
     "$log_dir/toasty.pid" \
+    "$log_dir/dbus.pid" \
     "$log_dir/triad.pid" \
     "$log_dir/triad-supervisor.pid"
 
@@ -427,6 +431,7 @@ write_ready_file() {
     printf 'river_pid=%s\n' "$river_pid"
     printf 'wayvnc_pid=%s\n' "$wayvnc_pid"
     printf 'toasty_pid=%s\n' "$toasty_pid"
+    printf 'dbus_pid=%s\n' "$dbus_pid"
     printf 'wayland_display=%s\n' "$WAYLAND_DISPLAY"
     printf 'vnc_address=%s\n' "$vnc_address"
     printf 'vnc_port=%s\n' "$vnc_port"
@@ -483,6 +488,7 @@ is_unsigned_integer "$startup_attempts" ||
 river_bin=$(find_command "$river_bin")
 wayvnc_bin=$(find_command "$wayvnc_bin")
 wayland_info_bin=$(find_command "$wayland_info_bin")
+dbus_daemon_bin=$(find_command "$dbus_daemon_bin")
 find_command nc >/dev/null
 
 umask 077
@@ -506,6 +512,7 @@ export XDG_CURRENT_DESKTOP=river
 export XDG_SESSION_DESKTOP=toasty
 export XDG_SESSION_TYPE=wayland
 export NIMKIT_THEME=${NIMKIT_THEME:-DarkBSD}
+export TOASTY_SESSION_PID=$$
 export TRIAD_BIN="$triad_bin"
 export TRIAD_CONFIG="$triad_config"
 export TOASTY_SESSION_ACTIVE_LOG_DIR="$log_dir"
@@ -521,6 +528,21 @@ else
   unset WLR_HEADLESS_OUTPUTS
 fi
 unset WAYLAND_DISPLAY
+
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+  dbus_details=$(
+    "$dbus_daemon_bin" --session --fork --print-address=1 --print-pid=1
+  )
+  DBUS_SESSION_BUS_ADDRESS=$(printf '%s\n' "$dbus_details" | sed -n '1p')
+  dbus_pid=$(printf '%s\n' "$dbus_details" | sed -n '2p')
+  export DBUS_SESSION_BUS_ADDRESS
+  is_unsigned_integer "$dbus_pid" || fail "D-Bus did not report a valid PID"
+  process_is_running "$dbus_pid" || fail "D-Bus session exited during startup"
+  printf '%s\n' "$dbus_pid" >"$log_dir/dbus.pid"
+  log_event "D-Bus session ready (pid $dbus_pid)"
+else
+  log_event "using existing D-Bus session"
+fi
 
 log_event "starting River"
 "$river_bin" -log-level debug \
@@ -550,6 +572,7 @@ require_protocol zwlr_layer_shell_v1 4
   printf 'triad_commit=%s\n' "$(git -C "$default_triad_dir" rev-parse HEAD)"
   printf 'WAYLAND_DISPLAY=%s\n' "$WAYLAND_DISPLAY"
   printf 'XDG_RUNTIME_DIR=%s\n' "$XDG_RUNTIME_DIR"
+  printf 'DBUS_SESSION_BUS_ADDRESS=%s\n' "$DBUS_SESSION_BUS_ADDRESS"
   printf 'backend=%s\n' "$WLR_BACKENDS"
   printf 'renderer=%s\n' "$WLR_RENDERER"
   printf 'headless_outputs=%s\n' "${WLR_HEADLESS_OUTPUTS:-}"

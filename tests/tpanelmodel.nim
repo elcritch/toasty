@@ -26,12 +26,22 @@ suite "panel view model":
     check panels[0].outputName == "HEADLESS-1"
     check panels[0].outputIndex == 0
     check panels[0].outputWidth == 1280
+    check panels[0].outputHeight == 720
+    check panels[0].outputScale == 1.0
     check panels[0].workspaces[0].label == "main"
     check panels[0].workspaces[0].active
     check panels[0].focusedTitle == "Toasty probe"
     check panels[1].outputName == "DP-1"
     check panels[1].outputIndex == 1
     check panels[1].workspaces[0].label == "2"
+
+  test "uses logical output dimensions at fractional and integer scale":
+    var state = initTriadShellState(fixture("triad_state.json").parseSnapshotReply())
+    state.outputs[0].scale = 2.0
+
+    let panel = state.panelViewModels()[0]
+    check panel.outputWidth == 640
+    check panel.outputHeight == 360
 
   test "removes disconnected outputs and compacts layer output indices":
     var state = initTriadShellState(fixture("triad_state.json").parseSnapshotReply())

@@ -130,15 +130,15 @@ Exit criteria:
 
 ## Milestone 6: Desktop Shell Features
 
-- [ ] Application launcher and searchable command palette.
-- [ ] Notification daemon and notification center.
-- [ ] Overview driven by Triad's native state and commands.
-- [ ] Window switcher and recent-window UI.
-- [ ] Quick settings for audio, networking, brightness, and appearance.
-- [ ] Session actions for lock, logout, restart, suspend, and poweroff.
-- [ ] Wallpaper and desktop background surfaces.
-- [ ] Multi-monitor placement, scaling, and hotplug behavior.
-- [ ] Keyboard navigation and accessibility pass.
+- [x] Application launcher and searchable command palette.
+- [x] Notification daemon and notification center.
+- [x] Overview driven by Triad's native state and commands.
+- [x] Window switcher and recent-window UI.
+- [x] Quick settings for audio, networking, brightness, and appearance.
+- [x] Session actions for lock, logout, restart, suspend, and poweroff.
+- [x] Wallpaper and desktop background surfaces.
+- [x] Multi-monitor placement, scaling, and hotplug behavior.
+- [x] Keyboard navigation and accessibility pass.
 
 ## Milestone 7: Hardening and Distribution
 
