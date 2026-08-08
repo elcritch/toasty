@@ -17,6 +17,10 @@ nimcache/
 *.dSYM/
 tests/output/
 
+# Python helper bytecode.
+__pycache__/
+*.py[cod]
+
 # Editor, OS, and tool noise.
 .DS_Store
 .tool-versions

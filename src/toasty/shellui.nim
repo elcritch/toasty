@@ -55,6 +55,7 @@ type
     applications: seq[DesktopApplication]
     notifications: NotificationStore
     navigation: ShellNavigation
+    themeName: string
     settings: QuickSettingsState
     backgrounds: seq[BackgroundHost]
     panels: seq[PanelHost]
@@ -132,11 +133,14 @@ proc modelIndex(models: openArray[PanelViewModel], outputId: uint32): int =
 
 proc applyAppearance(ui: ShellUi) =
   let appearance =
-    case ui.navigation.appearance
-    of amDark:
-      initAppearance(initDarkBSDTheme())
-    of amLight:
-      initAppearance(initAquaTheme())
+    if ui.themeName.len > 0:
+      initAppearance(initThemeByName(ui.themeName))
+    else:
+      case ui.navigation.appearance
+      of amDark:
+        initAppearance(initDarkBSDTheme())
+      of amLight:
+        initAppearance(initAquaTheme())
   ui.app.setAppearance(appearance)
   for host in ui.backgrounds:
     host.root.background = backgroundColor(ui.navigation.appearance)
@@ -507,9 +511,7 @@ proc paletteResultButton(ui: ShellUi, item: PaletteItem): Button =
         selectedItem.title & " — " & selectedItem.detail.compactText(64)
       else:
         selectedItem.title
-  result = shellButton(
-    label, "palette-" & selectedItem.id, selectedItem.title
-  ) do():
+  result = shellButton(label, "palette-" & selectedItem.id, selectedItem.title) do():
     ui.activatePaletteItem(selectedItem)
   result.setHuggingPriority(LayoutPriorityLow, laHorizontal)
 
@@ -928,8 +930,11 @@ proc newShellUi*(
     applications: move applications,
     notifications: notifications,
     callbacks: move callbacks,
+    themeName: themeNameFromEnv(),
     lastAudibleVolume: 50,
   )
+  if result.themeName.len > 0:
+    stderr.writeLine("shell-theme: ", result.themeName)
   let wallpaperPath = getEnv("TOASTY_WALLPAPER")
   if wallpaperPath.len > 0 and fileExists(wallpaperPath):
     try:

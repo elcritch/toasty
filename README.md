@@ -146,11 +146,33 @@ Windows that were already open must be reopened or toggled individually.
 New floating windows currently share Triad's centered default geometry rather
 than using cascading or smart placement.
 
+Select a built-in Merenda/NimKit theme with `NIMKIT_THEME`:
+
+```sh
+NIMKIT_THEME=nebula nim sessionRelease
+```
+
+Available theme names include `darkbsd`, `aqua`, `macos`, `macos-dark`,
+`nebula`, `peachy`, and `synthwave83`. The login helper preserves an existing
+`NIMKIT_THEME` value, so the same variable can be set by a display-manager or
+login environment before running `tools/toasty-session.sh`. When no value is
+provided, Toasty uses DarkBSD and its appearance action can toggle to Aqua.
+
 The supervisor starts River, waits for Triad IPC, starts WayVNC on
 `127.0.0.1:5905`, and starts Toasty only after the display and remote endpoint
 are ready. Triad and Toasty have bounded restart loops; River and WayVNC remain
 stable while either component is replaced. Every process has a separate log
 below `~/.local/state/toasty/session/`.
+
+Capture the current WayVNC framebuffer as a PNG with the dependency-free
+helper:
+
+```sh
+tools/wayvnc-screenshot.py /tmp/toasty.png
+```
+
+It connects to `127.0.0.1:5905` by default. Use `--host` or `--port` for a
+different endpoint; the port also defaults from `TOASTY_VNC_PORT` when set.
 
 Run the live restart and clean-shutdown integration check with:
 

@@ -511,7 +511,6 @@ export XDG_RUNTIME_DIR="$runtime_dir"
 export XDG_CURRENT_DESKTOP=river
 export XDG_SESSION_DESKTOP=toasty
 export XDG_SESSION_TYPE=wayland
-export NIMKIT_THEME=${NIMKIT_THEME:-DarkBSD}
 export TOASTY_SESSION_PID=$$
 export TRIAD_BIN="$triad_bin"
 export TRIAD_CONFIG="$triad_config"
