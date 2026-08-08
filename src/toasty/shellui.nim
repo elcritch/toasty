@@ -499,6 +499,20 @@ proc activatePaletteItem(ui: ShellUi, item: PaletteItem) =
     of pcToggleAppearance:
       ui.toggleAppearance()
 
+proc paletteResultButton(ui: ShellUi, item: PaletteItem): Button =
+  let
+    selectedItem = item
+    label =
+      if selectedItem.detail.len > 0:
+        selectedItem.title & " — " & selectedItem.detail.compactText(64)
+      else:
+        selectedItem.title
+  result = shellButton(
+    label, "palette-" & selectedItem.id, selectedItem.title
+  ) do():
+    ui.activatePaletteItem(selectedItem)
+  result.setHuggingPriority(LayoutPriorityLow, laHorizontal)
+
 proc renderPaletteResults(ui: ShellUi) =
   if ui.overlay.isNil or ui.overlay.results.isNil:
     return
@@ -507,17 +521,7 @@ proc renderPaletteResults(ui: ShellUi) =
   if results.len == 0:
     ui.overlay.results.addArrangedSubview(newStatusLabel("No matching result"))
   for item in results:
-    let
-      selectedItem = item
-      label =
-        if selectedItem.detail.len > 0:
-          selectedItem.title & " — " & selectedItem.detail.compactText(64)
-        else:
-          selectedItem.title
-      button = shellButton(label, "palette-" & selectedItem.id, selectedItem.title) do():
-        ui.activatePaletteItem(selectedItem)
-    button.setHuggingPriority(LayoutPriorityLow, laHorizontal)
-    ui.overlay.results.addArrangedSubview(button)
+    ui.overlay.results.addArrangedSubview(ui.paletteResultButton(item))
 
 proc paletteChanged(ui: ShellUi, sender: DynamicAgent) {.slot.} =
   discard sender
