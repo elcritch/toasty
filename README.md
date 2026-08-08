@@ -127,6 +127,25 @@ Use optimized Triad and Toasty builds for the release-shaped session:
 nim sessionRelease
 ```
 
+Supervised sessions use `config.freeform.kdl` by default. It includes Triad's
+standard configuration and opens new windows floating. The relevant controls
+from the standard configuration are:
+
+- `Super` + left-drag: move
+- `Super` + right-drag: resize
+- `Super+t`: toggle floating/tiling
+- `Super` + middle-click: maximize
+
+Set `TOASTY_TRIAD_CONFIG` to use a different profile, for example:
+
+```sh
+TOASTY_TRIAD_CONFIG="$PWD/external/triad/config.default.kdl" nim sessionRelease
+```
+
+Windows that were already open must be reopened or toggled individually.
+New floating windows currently share Triad's centered default geometry rather
+than using cascading or smart placement.
+
 The supervisor starts River, waits for Triad IPC, starts WayVNC on
 `127.0.0.1:5905`, and starts Toasty only after the display and remote endpoint
 are ready. Triad and Toasty have bounded restart loops; River and WayVNC remain

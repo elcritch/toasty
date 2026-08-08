@@ -1,0 +1,7 @@
+// Keep Triad's standard bindings and behavior, but open every new window in
+// floating mode by default.
+include "external/triad/config.default.kdl"
+
+window-rule {
+    open-floating #true
+}

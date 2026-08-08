@@ -10,7 +10,7 @@ if [ ! -d "$default_triad_dir" ] && [ -d "$project_dir/external/triad" ]; then
   default_triad_dir="$project_dir/external/triad"
 fi
 triad_bin=${TOASTY_TRIAD_BIN:-"$default_triad_dir/triad"}
-triad_config=${TOASTY_TRIAD_CONFIG:-"$default_triad_dir/config.default.kdl"}
+triad_config=${TOASTY_TRIAD_CONFIG:-"$project_dir/config.freeform.kdl"}
 toasty_bin=${TOASTY_TOASTY_BIN:-"$project_dir/examples/toasty_panel"}
 river_bin=${TOASTY_RIVER_BIN:-river}
 wayvnc_bin=${TOASTY_WAYVNC_BIN:-wayvnc}
